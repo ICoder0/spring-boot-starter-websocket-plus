@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.icoder0</groupId>
-    <artifactId>spring-websocket-plus-starter</artifactId>
+    <artifactId>spring-boot-starter-websocket-plus</artifactId>
     <version>0.0.1</version>
 
-    <name>spring :: websocket :: plus :: starter</name>
+    <name>spring-boot :: starter :: websocket-plus</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
