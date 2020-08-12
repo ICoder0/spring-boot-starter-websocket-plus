@@ -1,0 +1,65 @@
+{
+  "groups": [
+    {
+      "name": "websocket-plus",
+      "type": "com.icoder0.websocket.core.annotation.WebsocketPlusProperties",
+      "description": "Description for websocket-plus."
+    }
+  ],
+  "properties": [
+    {
+      "name": "websocket-plus.asyncSendTimeout",
+      "type": "java.lang.Long",
+      "defaultValue": 3000,
+      "description": "async send timeout"
+    },
+    {
+      "name": "websocket-plus.maxSessionIdleTimeout",
+      "type": "java.lang.Long",
+      "defaultValue": 60000,
+      "description": "websocketSession最大闲置超时时间"
+    },
+    {
+      "name": "websocket-plus.maxTextMessageBufferSize",
+      "type": "java.lang.Integer",
+      "defaultValue": 10240,
+      "description": "最大文本内容缓冲区大小限制"
+    },
+    {
+      "name": "websocket-plus.maxBinaryMessageBufferSize",
+      "type": "java.lang.Integer",
+      "defaultValue": 10240,
+      "description": "最大二进制内容缓冲区大小限制"
+    },
+    {
+      "name": "websocket-plus.withSockJS",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "是否需要开启sockjs"
+    },
+    {
+      "name": "websocket-plus.allowedOrigins",
+      "defaultValue": ["*"],
+      "sourceType": "com.icoder0.websocket.core.annotation.WebsocketPlusProperties",
+      "description": "跨域origins集合"
+    },
+    {
+      "name": "websocket-plus.outerDecodeClazz",
+      "type": "java.lang.Class",
+      "defaultValue": "com.icoder0.websocket.core.model.WsInboundBean",
+      "description": "textMessage最外层类的类型"
+    },
+    {
+      "name": "websocket-plus.innerDecodeParamKeyName",
+      "type": "java.lang.String",
+      "defaultValue": "params",
+      "description": "最大二进制内容缓冲区大小限制"
+    },
+    {
+      "name": "websocket-plus.messageReqName",
+      "type": "java.lang.String",
+      "defaultValue": "req",
+      "description": "最大二进制内容缓冲区大小限制"
+    }
+  ]
+}
