@@ -24,12 +24,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.socket.*;
 
 import javax.validation.ValidationException;
-import javax.validation.groups.Default;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -40,9 +38,9 @@ import java.util.stream.Collectors;
 @Setter
 @Getter
 @Builder
-public class WebsocketDelegatorHandler implements WsExceptionHandler, WebSocketHandler {
+public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketHandler {
 
-    private final String[] routeMapping;
+    private final String[] mappings;
 
     private final String location;
 
@@ -199,6 +197,7 @@ public class WebsocketDelegatorHandler implements WsExceptionHandler, WebSocketH
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         log.info("[{}] 断开连接", session.getRemoteAddress() + "@" + session.getId());
+        //todo 清理缓存
     }
 
     @Override

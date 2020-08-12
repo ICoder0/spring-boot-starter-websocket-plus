@@ -14,7 +14,6 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.Validator;
-import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurationSupport;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistration;
@@ -30,9 +29,10 @@ import java.util.stream.Collectors;
  * @since 2020/8/1
  */
 @Slf4j
-public class WebsocketAnnotationBeanPostProcessor extends WebSocketConfigurationSupport implements BeanPostProcessor, ApplicationContextAware, WebSocketConfigurer, ApplicationListener<ContextRefreshedEvent> {
+public class WebsocketAnnotationBeanPostProcessor extends WebSocketConfigurationSupport implements BeanPostProcessor, ApplicationContextAware,
+        WebSocketConfigurer, ApplicationListener<ContextRefreshedEvent> {
 
-    private final Map<String[], WebsocketDelegatorHandler> delegatorHandlerMap = new HashMap<>();
+    private final Map<String[], WebsocketArchetypeHandler> delegatorHandlerMap = new HashMap<>();
 
     private final Map<Object, WebsocketAdvice> websocketAdviceMap = new HashMap<>(2 >> 5);
 
@@ -55,23 +55,22 @@ public class WebsocketAnnotationBeanPostProcessor extends WebSocketConfiguration
         final WebsocketMapping websocketMapping = AnnotationUtils.findAnnotation(targetClass, WebsocketMapping.class);
         final WebsocketAdvice websocketAdvice = AnnotationUtils.findAnnotation(targetClass, WebsocketAdvice.class);
         if (Objects.nonNull(websocketMapping)) {
-            final List<WebsocketDelegatorHandler.WsMappingHandlerMethodMetadata> wsMappingHandlerMethodMetadataList = MethodIntrospector
-                    .selectMethods(targetClass, (ReflectionUtils.MethodFilter) method ->
-                            Objects.nonNull(AnnotationUtils.findAnnotation(method, WebsocketMethodMapping.class))
-                    ).parallelStream().map(method -> {
+            final String[] mappings = websocketMapping.mapping();
+            final List<WebsocketArchetypeHandler.WsMappingHandlerMethodMetadata> mappingMethodMetadataList = MethodIntrospector.selectMethods(targetClass, (ReflectionUtils.MethodFilter) method -> AnnotatedElementUtils.hasAnnotation(method, WebsocketMapping.class)).parallelStream()
+                    .map(method -> {
                         final WebsocketMethodMapping websocketMethodMapping = _checkWebsocketMethodMapping(method);
-                        return WebsocketDelegatorHandler.WsMappingHandlerMethodMetadata.builder()
+                        return WebsocketArchetypeHandler.WsMappingHandlerMethodMetadata.builder()
                                 .value(websocketMethodMapping.expr())
                                 .bean(bean)
                                 .method(method)
                                 .build();
                     }).collect(Collectors.toList());
-            delegatorHandlerMap.put(websocketMapping.value(), WebsocketDelegatorHandler.builder()
+            delegatorHandlerMap.put(mappings, WebsocketArchetypeHandler.builder()
                     .validator(getValidator())
-                    .routeMapping(websocketMapping.value())
+                    .mappings(mappings)
                     .location(targetClass.getPackage().getName())
                     .websocketPlusProperties(websocketPlusProperties)
-                    .mappingMethodMetadataList(wsMappingHandlerMethodMetadataList)
+                    .mappingMethodMetadataList(mappingMethodMetadataList)
                     .build()
             );
         }
@@ -124,13 +123,13 @@ public class WebsocketAnnotationBeanPostProcessor extends WebSocketConfiguration
             final Class<?> targetClass = AopProxyUtils.ultimateTargetClass(bean);
             final WebsocketAdvice websocketAdvice = entry.getValue();
             final String[] locations = websocketAdvice.basePackages();
-            final List<WebsocketDelegatorHandler.WsExceptionHandlerMethodMetadata> wsExceptionHandlerMethodMetadataList = MethodIntrospector
+            final List<WebsocketArchetypeHandler.WsExceptionHandlerMethodMetadata> wsExceptionHandlerMethodMetadataList = MethodIntrospector
                     .selectMethods(targetClass, (ReflectionUtils.MethodFilter) method ->
                             Objects.nonNull(AnnotationUtils.findAnnotation(method, WebsocketExceptionHandler.class))
                     ).parallelStream().flatMap(method -> {
                         final WebsocketExceptionHandler websocketExceptionHandler = _checkWebsocketExceptionHandler(method);
                         return Arrays.stream(websocketExceptionHandler.value())
-                                .map(exception -> WebsocketDelegatorHandler.WsExceptionHandlerMethodMetadata.builder()
+                                .map(exception -> WebsocketArchetypeHandler.WsExceptionHandlerMethodMetadata.builder()
                                         .value(exception)
                                         .bean(bean)
                                         .method(method)
@@ -138,13 +137,13 @@ public class WebsocketAnnotationBeanPostProcessor extends WebSocketConfiguration
                                 );
                     }).collect(Collectors.toList());
             delegatorHandlerMap.values().parallelStream()
-                    .filter(websocketDelegatorHandler -> Arrays.stream(locations)
-                            .anyMatch(location -> StringUtils.startsWithIgnoreCase(websocketDelegatorHandler.getLocation(), location)))
-                    .forEach(websocketDelegatorHandler -> {
-                                final List<WebsocketDelegatorHandler.WsExceptionHandlerMethodMetadata> original = Optional.ofNullable(websocketDelegatorHandler.getExceptionMethodMetadataList())
+                    .filter(websocketArchetypeHandler -> Arrays.stream(locations)
+                            .anyMatch(location -> StringUtils.startsWithIgnoreCase(websocketArchetypeHandler.getLocation(), location)))
+                    .forEach(websocketArchetypeHandler -> {
+                                final List<WebsocketArchetypeHandler.WsExceptionHandlerMethodMetadata> original = Optional.ofNullable(websocketArchetypeHandler.getExceptionMethodMetadataList())
                                         .orElseGet(ArrayList::new);
                                 original.addAll(wsExceptionHandlerMethodMetadataList);
-                                websocketDelegatorHandler.setExceptionMethodMetadataList(original);
+                                websocketArchetypeHandler.setExceptionMethodMetadataList(original);
                             }
                     );
         }
@@ -155,13 +154,13 @@ public class WebsocketAnnotationBeanPostProcessor extends WebSocketConfiguration
         this.context = context;
     }
 
-    public ApplicationContext getContext(){
+    public ApplicationContext getContext() {
         return this.context;
     }
 
-    public Validator getValidator(){
+    public Validator getValidator() {
         final String MVC_VALIDATOR_NAME = "mvcValidator";
-        if (Objects.isNull(validator)){
+        if (Objects.isNull(validator)) {
             if (this.context != null && this.context.containsBean(MVC_VALIDATOR_NAME)) {
                 this.validator = this.context.getBean(MVC_VALIDATOR_NAME, org.springframework.validation.Validator.class);
             }

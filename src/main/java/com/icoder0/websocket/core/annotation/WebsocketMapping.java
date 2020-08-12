@@ -1,6 +1,7 @@
 package com.icoder0.websocket.core.annotation;
 
 import org.springframework.core.Ordered;
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.Mapping;
@@ -17,5 +18,9 @@ import java.lang.annotation.*;
 @Component
 public @interface WebsocketMapping {
 
-    String[] value();
+    @AliasFor("mapping")
+    String[] value() default {"true"};
+
+    @AliasFor("value")
+    String[] mapping() default {"true"};
 }
