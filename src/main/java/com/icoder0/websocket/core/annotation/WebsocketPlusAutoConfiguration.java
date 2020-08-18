@@ -1,42 +1,39 @@
 package com.icoder0.websocket.core.annotation;
 
-import org.springframework.aop.framework.autoproxy.AutoProxyUtils;
-import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import com.icoder0.websocket.core.aop.DefaultWebsocketMessageAspect;
+import com.icoder0.websocket.core.aop.WebsocketMessageAspect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Role;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.env.Environment;
-import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
-import org.springframework.web.socket.config.annotation.*;
-import org.springframework.web.socket.server.HandshakeInterceptor;
+import org.springframework.context.annotation.*;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
-import javax.validation.Validator;
-
 /**
- * {@code @Configuration} class that registers a {@link WebsocketAnnotationBeanPostProcessor}
- * * bean capable of processing Spring's @{@link WebsocketMapping etc} annotation.
+ * {@code @Configuration} class that registers a bean capable of processing Spring's @{@link WebsocketMapping etc} annotation.
  *
  * @author bofa1ex
  * @see EnableWebsocketPlus
- * @see WebsocketAnnotationBeanPostProcessor
+ * @see org.springframework.context.annotation.EnableAspectJAutoProxy
  * @since 2020/8/1
  */
 @Configuration
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableConfigurationProperties(WebsocketPlusProperties.class)
-@AutoConfigureAfter(DelegatingWebSocketConfiguration.class)
+@AutoConfigureAfter(WebsocketConfigurationSupportEx.class)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class WebsocketPlusAutoConfiguration {
 
+    /**
+     * @code @Aspect 注解修饰的bean对象必须在WebsocketPlusBeanFactoryPostProcessor前注入到容器, 否则在#createBean时, 无法对注入的bean对象
+     * 实现织入cglib代理.
+     */
+    @Bean
+    @ConditionalOnMissingBean(WebsocketMessageAspect.class)
+    public DefaultWebsocketMessageAspect websocketMessageAspect() {
+        return new DefaultWebsocketMessageAspect();
+    }
 
     @Bean
     public ServletServerContainerFactoryBean createWebSocketContainer(@Autowired WebsocketPlusProperties websocketPlusProperties) {
@@ -50,10 +47,7 @@ public class WebsocketPlusAutoConfiguration {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    @Order
-    public WebsocketAnnotationBeanPostProcessor websocketAnnotationBeanPostProcessor(
-            @Autowired WebsocketPlusProperties websocketPlusProperties,
-            @Autowired(required = false) HandshakeInterceptor... handlerInterceptors) {
-        return new WebsocketAnnotationBeanPostProcessor(websocketPlusProperties, handlerInterceptors);
+    public WebsocketPlusBeanPostProcessor websocketPlusBeanFactoryPostProcessor() {
+        return new WebsocketPlusBeanPostProcessor();
     }
 }
