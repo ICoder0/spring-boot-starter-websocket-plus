@@ -28,6 +28,8 @@ import java.util.Map;
 @Slf4j
 public class WebsocketMessageAspectEx implements WebsocketMessageAspect {
 
+    String USER_ID_ATTRIBUTE_KEY = "USER_ID";
+
     @Override
     @Before(value = "execution(* com.icoder0.websocket.core.annotation.WebsocketArchetypeHandler.handleMessage(..)) && args(session, message)", argNames = "session, message")
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
@@ -60,7 +62,7 @@ public class WebsocketMessageAspectEx implements WebsocketMessageAspect {
         if (log.isWarnEnabled()) {
             log.warn("[{}] 断开连接", session.getRemoteAddress() + "@" + session.getId());
         }
-        final Object userId = session.getAttributes().get(SessionConstants.USER_ID_ATTRIBUTE_KEY);
+        final Object userId = session.getAttributes().get(USER_ID_ATTRIBUTE_KEY);
         log.warn("[{}]缓存已清理 [{}]", session.getRemoteAddress() + "@" + session.getId(), userId);
     }
 
