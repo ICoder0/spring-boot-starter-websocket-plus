@@ -1,1 +1,0 @@
-package com.icoder0.websocket.core.model;import com.alibaba.fastjson.annotation.JSONField;import lombok.Builder;import lombok.Data;import java.util.Map;/** * @author bofa1ex * @since 2020/6/30 */@Data@Builderpublic class WsOutboundBean {    /* 消息序号 */    @JSONField    private Long seq;    @JSONField(ordinal = 1)    private Map<String, Object> result;}
