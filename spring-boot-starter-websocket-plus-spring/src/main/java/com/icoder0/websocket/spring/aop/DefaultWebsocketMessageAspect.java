@@ -24,7 +24,7 @@ public class DefaultWebsocketMessageAspect implements WebsocketMessageAspect {
     }
 
     @Override
-    @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.handleMessage(..))" +
+    @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.afterConnectionEstablished(..))" +
             "&& args(session)", argNames = "session")
     public void afterConnectionEstablished(WebSocketSession session) {
         if (log.isInfoEnabled()) {
