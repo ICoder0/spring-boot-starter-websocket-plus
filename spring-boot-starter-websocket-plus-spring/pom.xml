@@ -18,7 +18,6 @@
         <dependency>
             <groupId>com.icoder0</groupId>
             <artifactId>spring-boot-starter-websocket-plus-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

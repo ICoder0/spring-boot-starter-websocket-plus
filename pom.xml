@@ -41,6 +41,26 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
+                <groupId>com.icoder0</groupId>
+                <artifactId>spring-boot-starter-websocket-plus-autoconfigure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.icoder0</groupId>
+                <artifactId>spring-boot-starter-websocket-plus-annotation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.icoder0</groupId>
+                <artifactId>spring-boot-starter-websocket-plus-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.icoder0</groupId>
+                <artifactId>spring-boot-starter-websocket-plus-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson.version}</version>
