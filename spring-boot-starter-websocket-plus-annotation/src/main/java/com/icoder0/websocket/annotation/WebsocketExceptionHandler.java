@@ -16,4 +16,6 @@ public @interface WebsocketExceptionHandler {
      * exceptions listed in the method argument list.
      */
     Class<? extends Throwable>[] value() default {};
+
+    int priority() default Integer.MAX_VALUE;
 }

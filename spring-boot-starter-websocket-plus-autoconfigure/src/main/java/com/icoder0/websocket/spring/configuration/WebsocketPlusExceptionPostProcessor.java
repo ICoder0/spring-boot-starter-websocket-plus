@@ -2,7 +2,6 @@ package com.icoder0.websocket.spring.configuration;
 
 import com.icoder0.websocket.annotation.WebsocketAdvice;
 import com.icoder0.websocket.annotation.WebsocketExceptionHandler;
-import com.icoder0.websocket.spring.WebsocketArchetypeHandler;
 import com.icoder0.websocket.spring.handler.model.WsExceptionHandlerMethodMetadata;
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMetadata;
 import lombok.extern.slf4j.Slf4j;
@@ -10,13 +9,10 @@ import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
@@ -41,13 +37,17 @@ public class WebsocketPlusExceptionPostProcessor implements ApplicationContextAw
     public Object postProcessAfterInitialization(@NotNull Object bean, @NotNull String beanName) throws BeansException {
         final Class<?> beanClazz = AopProxyUtils.ultimateTargetClass(bean);
         Optional.ofNullable(AnnotationUtils.findAnnotation(bean.getClass(), WebsocketAdvice.class)).ifPresent(websocketAdvice -> {
+            final int advicePriority = websocketAdvice.priority();
             final List<WsExceptionHandlerMethodMetadata> wsExceptionHandlerMethodMetadataList = MethodIntrospector
                     .selectMethods(beanClazz, (ReflectionUtils.MethodFilter) method ->
                             Objects.nonNull(AnnotationUtils.findAnnotation(method, WebsocketExceptionHandler.class))
                     ).parallelStream().flatMap(method -> {
                         final WebsocketExceptionHandler websocketExceptionHandler = AnnotationUtils.getAnnotation(method, WebsocketExceptionHandler.class);
+                        final int websocketExceptionHandlerPriority = websocketExceptionHandler.priority();
                         return Arrays.stream(websocketExceptionHandler.value()).parallel()
                                 .map(exception -> WsExceptionHandlerMethodMetadata.builder()
+                                        // 优先级处理, ADVICE > EXCEPTION_HANDLER
+                                        .priority(Math.max(websocketExceptionHandlerPriority, advicePriority))
                                         .value(exception)
                                         .bean(bean)
                                         .method(method)

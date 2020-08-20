@@ -13,7 +13,6 @@ import com.icoder0.websocket.spring.handler.model.WsExceptionHandlerMethodMetada
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodMetadata;
 import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
 import lombok.Data;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.ReflectionUtils;
@@ -54,14 +53,15 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
 
     @Override
     public void handleException(WebSocketSession session, Throwable t) {
-        final Optional<WsExceptionHandlerMethodMetadata> metadataOptional = this.getExceptionMethodMetadataList().parallelStream()
+        final List<WsExceptionHandlerMethodMetadata> exceptionHandlerMethodMetadataList = this.getExceptionMethodMetadataList().parallelStream()
                 .filter(_metadata -> org.springframework.util.TypeUtils.isAssignable(_metadata.getValue(), t.getClass()))
-                .findFirst();
-        if (!metadataOptional.isPresent()) {
+                .collect(Collectors.toList());
+        if (exceptionHandlerMethodMetadataList.isEmpty()) {
             log.warn("该异常类型{} 没有被正确处理", t.getClass().getSimpleName());
             return;
         }
-        metadataOptional.ifPresent(metadata -> {
+        exceptionHandlerMethodMetadataList.parallelStream()
+                .sorted(Comparator.comparing(WsExceptionHandlerMethodMetadata::getPriority, Comparator.reverseOrder())).forEach(metadata -> {
             final Method method = metadata.getMethod();
             final Object[] args = Arrays.stream(method.getParameters()).parallel().map(parameter ->
                     org.springframework.util.TypeUtils.isAssignable(Exception.class, parameter.getType()) ?

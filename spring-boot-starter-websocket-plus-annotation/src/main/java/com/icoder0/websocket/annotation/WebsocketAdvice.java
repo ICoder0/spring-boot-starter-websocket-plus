@@ -21,4 +21,5 @@ public @interface WebsocketAdvice {
     @AliasFor("value")
     String[] basePackages() default {};
 
+    int priority() default Integer.MAX_VALUE;
 }

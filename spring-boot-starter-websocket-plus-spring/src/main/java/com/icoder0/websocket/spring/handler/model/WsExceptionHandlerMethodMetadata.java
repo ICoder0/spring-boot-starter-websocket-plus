@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 @Builder
 public class WsExceptionHandlerMethodMetadata {
     private final Class<? extends Throwable> value;
+    private final Integer priority;
     private final Method method;
     private final Object bean;
 }
