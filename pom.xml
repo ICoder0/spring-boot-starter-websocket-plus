@@ -1,85 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.icoder0</groupId>
+    <parent>
+        <groupId>com.icoder0</groupId>
+        <artifactId>spring-boot-starter-websocket-plus-parent</artifactId>
+        <version>0.1.0</version>
+    </parent>
     <artifactId>spring-boot-starter-websocket-plus</artifactId>
-    <packaging>pom</packaging>
-    <version>0.1.0</version>
-    <modules>
-        <module>spring-boot-starter-websocket-plus-core</module>
-        <module>spring-boot-starter-websocket-plus-annotation</module>
-        <module>spring-boot-starter-websocket-plus-autoconfigure</module>
-        <module>spring-boot-starter-websocket-plus-spring</module>
-    </modules>
 
     <name>spring :: boot :: starter :: websocket :: plus</name>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-
-        <!-- 如有版本更新, 这里可考虑修改spring-boot对应的版本号 -->
-        <spring.boot.version>2.2.6.RELEASE</spring.boot.version>
-        <fastjson.version>1.2.68</fastjson.version>
-        <guava.version>28.2-jre</guava.version>
-        <bouncycastyle.version>1.64</bouncycastyle.version>
-        <aspectj.version>1.9.5</aspectj.version>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <!-- Import dependency management from Spring Boot -->
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring.boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.icoder0</groupId>
-                <artifactId>spring-boot-starter-websocket-plus-autoconfigure</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.icoder0</groupId>
-                <artifactId>spring-boot-starter-websocket-plus-annotation</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.icoder0</groupId>
-                <artifactId>spring-boot-starter-websocket-plus-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.icoder0</groupId>
-                <artifactId>spring-boot-starter-websocket-plus-spring</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.aspectj</groupId>
-                <artifactId>aspectjweaver</artifactId>
-                <version>${aspectj.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk15on</artifactId>
-                <version>${bouncycastyle.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.icoder0</groupId>
+            <artifactId>spring-boot-starter-websocket-plus-autoconfigure</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
 </project>

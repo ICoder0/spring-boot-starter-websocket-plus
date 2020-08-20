@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>com.icoder0</groupId>
-            <artifactId>spring-boot-starter-websocket-plus-autoconfigure</artifactId>
+            <artifactId>spring-boot-starter-websocket-plus</artifactId>
             <version>0.1.0</version>
         </dependency>
     </dependencies>
