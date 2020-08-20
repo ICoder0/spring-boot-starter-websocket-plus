@@ -121,7 +121,9 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                 break;
             }
         } while (index < spelExpressions.length);
-        throw new WsSpelValidationException();
+        if (!exprMatched) {
+            throw new WsSpelValidationException();
+        }
     }
 
     public Object[] processMethodParameters(Parameter[] parameters, WebSocketSession webSocketSession, TextMessage textMessage) {
