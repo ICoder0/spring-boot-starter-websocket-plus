@@ -7,7 +7,7 @@
     <groupId>com.icoder0</groupId>
     <artifactId>spring-boot-starter-websocket-plus-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 
     <licenses>
         <license>
@@ -40,7 +40,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <!-- 如有版本更新, 这里可考虑修改spring-boot对应的版本号 -->
-        <spring.boot.websocket.plus.version>0.1.0</spring.boot.websocket.plus.version>
+        <spring.boot.websocket.plus.version>0.1.1</spring.boot.websocket.plus.version>
         <spring.boot.version>2.2.6.RELEASE</spring.boot.version>
         <fastjson.version>1.2.68</fastjson.version>
         <guava.version>28.2-jre</guava.version>
