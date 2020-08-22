@@ -21,7 +21,7 @@ import java.io.IOException;
 @WebsocketAdvice("com.icoder0")
 public class DefaultWsGlobalExceptionAdvice {
 
-    @WebsocketExceptionHandler(RuntimeException.class)
+    @WebsocketExceptionHandler(value = RuntimeException.class, priority = Integer.MIN_VALUE)
     public void handleRuntimeException(WebSocketSession session, RuntimeException e) throws IOException {
         session.sendMessage(new TextMessage(JSON.toJSONString(ImmutableMap.of(
                 "code", 500,
