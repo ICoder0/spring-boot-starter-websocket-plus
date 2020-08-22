@@ -60,8 +60,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
             log.warn("该异常类型{} 没有被正确处理", t.getClass().getSimpleName());
             return;
         }
-        exceptionHandlerMethodMetadataList.parallelStream()
-                .sorted(Comparator.comparing(WsExceptionHandlerMethodMetadata::getPriority, Comparator.reverseOrder())).forEach(metadata -> {
+        exceptionHandlerMethodMetadataList.parallelStream().max(Comparator.comparing(WsExceptionHandlerMethodMetadata::getPriority)).ifPresent(metadata -> {
             final Method method = metadata.getMethod();
             final Object[] args = Arrays.stream(method.getParameters()).parallel().map(parameter ->
                     org.springframework.util.TypeUtils.isAssignable(Exception.class, parameter.getType()) ?
