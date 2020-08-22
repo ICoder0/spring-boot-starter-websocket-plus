@@ -83,6 +83,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
             try {
                 /* 暂时先不处理除TextMessage以外的类型数据, 没这方面的需求 */
                 if (message instanceof TextMessage) {
+                    log.info("Receive [{}] message {}", session.getRemoteAddress() + "@" + session.getId(), message.getPayload());
                     final TextMessage textMessage = TypeUtils.cast(message, TextMessage.class, ParserConfig.getGlobalInstance());
                     validate(JSON.parseObject(textMessage.getPayload(), outerDecodeClazz), spelExpressions);
                     final Object[] args = processMethodParameters(method.getParameters(), session, textMessage);
@@ -91,7 +92,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                         log.warn("no result found after invoke {}", method);
                         return;
                     }
-                    log.info("[{}] send message {}", session.getRemoteAddress() + "@" + session.getId(), outboundBean);
+                    log.info("Send [{}] message {}", session.getRemoteAddress() + "@" + session.getId(), outboundBean);
                     WebsocketMessageEmitter.emit(outboundBean, session);
                 }
             } catch (WsSpelValidationException ignored) {
