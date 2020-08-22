@@ -46,8 +46,8 @@ public class WebsocketPlusExceptionPostProcessor implements ApplicationContextAw
                         final int websocketExceptionHandlerPriority = websocketExceptionHandler.priority();
                         return Arrays.stream(websocketExceptionHandler.value()).parallel()
                                 .map(exception -> WsExceptionHandlerMethodMetadata.builder()
-                                        // 优先级处理, ADVICE > EXCEPTION_HANDLER
-                                        .priority(Math.max(websocketExceptionHandlerPriority, advicePriority))
+                                        // fix: swap and retain the low priority.
+                                        .priority(Math.min(websocketExceptionHandlerPriority, advicePriority))
                                         .value(exception)
                                         .bean(bean)
                                         .method(method)
