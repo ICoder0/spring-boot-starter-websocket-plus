@@ -9,7 +9,7 @@ import org.springframework.web.socket.WebSocketSession;
  * @author bofa1ex
  * @since 2020/8/14
  */
-public interface WebsocketMessageAspect {
+public interface WebsocketMessageAspectHandler {
 
     void handleMessage(WebSocketSession session, WebSocketMessage<?> message);
 
