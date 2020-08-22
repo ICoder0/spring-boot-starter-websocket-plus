@@ -1,39 +1,19 @@
 package com.icoder0.websocket.example;
 
-import com.alibaba.fastjson.JSON;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.icoder0.websocket.core.model.WsOutboundBean;
-import com.icoder0.websocket.core.utils.AESUtils;
-import com.icoder0.websocket.core.utils.Assert;
-import com.icoder0.websocket.core.utils.ByteUtils;
-import com.icoder0.websocket.spring.aop.WebsocketMessageAspect;
-import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
+import com.icoder0.websocket.spring.aop.WebsocketMessageAspectHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.adapter.standard.StandardWebSocketSession;
 
-import javax.websocket.Session;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 
 /**
  * @author bofa1ex
  * @since 2020/8/18
  */
-@Aspect
-@Component
 @Slf4j
-public class WebsocketMessageAspectEx implements WebsocketMessageAspect {
+public class WebsocketMessageAspectHandlerEx implements WebsocketMessageAspectHandler {
 
     String USER_ID_ATTRIBUTE_KEY = "USER_ID";
 
