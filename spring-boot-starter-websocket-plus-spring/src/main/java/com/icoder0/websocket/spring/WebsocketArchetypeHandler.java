@@ -3,8 +3,9 @@ package com.icoder0.websocket.spring;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
-import com.google.common.collect.ImmutableMap;
+import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
+import com.icoder0.websocket.core.model.WsOutboundBean;
 import com.icoder0.websocket.core.utils.Assert;
 import com.icoder0.websocket.core.utils.SpelUtils;
 import com.icoder0.websocket.spring.handler.WsExceptionHandler;
@@ -102,11 +103,9 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                 break;
             }
         }
-        Assert.checkXorCondition(semaphores == 0, () -> WebsocketMessageEmitter.emit(
-                ImmutableMap.of(
-                        "code", "400",
-                        "message", "请检查inbound message规范"
-                ), session)
+        Assert.checkXorCondition(semaphores == 0, () -> WebsocketMessageEmitter.emit(WsOutboundBean
+                .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
+                .message((String) message.getPayload()), session)
         );
     }
 
