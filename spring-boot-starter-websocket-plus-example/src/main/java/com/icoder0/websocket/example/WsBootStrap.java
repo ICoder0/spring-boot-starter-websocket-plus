@@ -25,12 +25,10 @@ public class WsBootStrap {
     public WsOutboundBean login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
         log.info("login {}", req);
         webSocketSession.getAttributes().put("account", req.getAccount());
-        return WsOutboundBean.builder()
-                .seq(0L)
-                .result(ImmutableMap.of(
+        return WsOutboundBean.ok()
+                .body(ImmutableMap.of(
                         "hello", "world"
-                ))
-                .build();
+                ));
     }
 
     @WebsocketMethodMapping("#inbound.code == 1003")
