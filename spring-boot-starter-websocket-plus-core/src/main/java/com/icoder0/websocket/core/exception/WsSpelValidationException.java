@@ -11,10 +11,10 @@ public class WsSpelValidationException extends WsException {
     }
 
     public WsSpelValidationException(String message) {
-        super(message, WsBusiCode.ILLEGAL_REQUEST_ERROR);
+        super(WsBusiCode.ILLEGAL_REQUEST_ERROR, message);
     }
 
     public WsSpelValidationException(String message, Throwable cause) {
-        super(message, cause, WsBusiCode.ILLEGAL_REQUEST_ERROR);
+        super(WsBusiCode.ILLEGAL_REQUEST_ERROR, message, cause);
     }
 }

@@ -12,12 +12,12 @@ public class WsException extends RuntimeException {
         this.wsBusiCode = wsBusiCode;
     }
 
-    public WsException(String message, WsBusiCode wsBusiCode) {
+    public WsException(WsBusiCode wsBusiCode, String message) {
         super(message);
         this.wsBusiCode = wsBusiCode;
     }
 
-    public WsException(String message, Throwable cause, WsBusiCode wsBusiCode) {
+    public WsException(WsBusiCode wsBusiCode, String message, Throwable cause) {
         super(message, cause);
         this.wsBusiCode = wsBusiCode;
     }
