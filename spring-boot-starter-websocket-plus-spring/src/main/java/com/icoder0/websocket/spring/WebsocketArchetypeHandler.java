@@ -54,14 +54,10 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
 
     @Override
     public void handleException(WebSocketSession session, Throwable t) {
-        final List<WsExceptionHandlerMethodMetadata> exceptionHandlerMethodMetadataList = this.getExceptionMethodMetadataList().parallelStream()
+        this.getExceptionMethodMetadataList().parallelStream()
                 .filter(_metadata -> org.springframework.util.TypeUtils.isAssignable(_metadata.getValue(), t.getClass()))
-                .collect(Collectors.toList());
-        if (exceptionHandlerMethodMetadataList.isEmpty()) {
-            log.warn("该异常类型{} 没有被正确处理", t.getClass().getSimpleName());
-            throw new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到处理器", t.getMessage()));
-        }
-        exceptionHandlerMethodMetadataList.parallelStream().max(Comparator.comparing(WsExceptionHandlerMethodMetadata::getPriority)).ifPresent(metadata -> {
+                // 按优先级最高的处理器
+                .max(Comparator.comparing(WsExceptionHandlerMethodMetadata::getPriority)).ifPresent(metadata -> {
             final Method method = metadata.getMethod();
             final Object[] args = Arrays.stream(method.getParameters()).parallel().map(parameter ->
                     org.springframework.util.TypeUtils.isAssignable(Exception.class, parameter.getType()) ?

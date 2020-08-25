@@ -21,8 +21,8 @@ import javax.validation.ValidationException;
 @WebsocketAdvice("com.icoder0")
 public class DefaultWsGlobalExceptionAdvice {
 
-    @WebsocketExceptionHandler(value = RuntimeException.class, priority = Integer.MIN_VALUE)
-    public void handleRuntimeException(WebSocketSession session, RuntimeException e) {
+    @WebsocketExceptionHandler(value = Throwable.class, priority = Integer.MIN_VALUE)
+    public void handleRootException(WebSocketSession session, Throwable e) {
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.INTERNAL_ERROR)
                 .message(e.getMessage()), session
