@@ -60,7 +60,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                 .max(Comparator.comparing(WsExceptionHandlerMethodMetadata::getPriority)).ifPresent(metadata -> {
             final Method method = metadata.getMethod();
             final Object[] args = Arrays.stream(method.getParameters()).parallel().map(parameter ->
-                    org.springframework.util.TypeUtils.isAssignable(Exception.class, parameter.getType()) ?
+                    org.springframework.util.TypeUtils.isAssignable(Throwable.class, parameter.getType()) ?
                             t : org.springframework.util.TypeUtils.isAssignable(WebSocketSession.class, parameter.getType()) ?
                             session : null
             ).toArray(Object[]::new);
