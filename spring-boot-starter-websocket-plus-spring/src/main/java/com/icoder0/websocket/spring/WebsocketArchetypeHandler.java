@@ -98,7 +98,8 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                 }
             } catch (WsSpelValidationException ignored) {
                 semaphores -= 1;
-            } catch (Exception e) {
+            } catch (Throwable e) {
+                e.printStackTrace();
                 handleException(session, e);
                 break;
             }
