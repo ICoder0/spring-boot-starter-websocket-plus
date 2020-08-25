@@ -28,6 +28,13 @@ public class Assert {
         }
     }
 
+    public <X extends Throwable> void checkXorCondition(Boolean condition, Supplier<? extends X> supplier) throws X {
+        if (condition) {
+            log.warn("wrong condition trigger the callback");
+            throw supplier.get();
+        }
+    }
+
     public void checkCondition(Boolean condition, Action action) {
         if (!condition) {
             log.warn("wrong condition trigger the callback");
