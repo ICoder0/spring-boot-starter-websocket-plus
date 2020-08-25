@@ -27,7 +27,7 @@ public @interface WebsocketApi {
      * @return tag name for operations under this resource, unless {@link #tags()} is defined.
      */
     @AliasFor("tags")
-    String value() default "";
+    String[] value() default "";
 
     /**
      * A list of tags for API documentation control.
