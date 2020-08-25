@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsBusiCode;
+import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
-import com.icoder0.websocket.core.model.WsOutboundBean;
 import com.icoder0.websocket.core.utils.Assert;
 import com.icoder0.websocket.core.utils.SpelUtils;
 import com.icoder0.websocket.spring.handler.WsExceptionHandler;
@@ -59,7 +59,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                 .collect(Collectors.toList());
         if (exceptionHandlerMethodMetadataList.isEmpty()) {
             log.warn("该异常类型{} 没有被正确处理", t.getClass().getSimpleName());
-            return;
+            throw new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到处理器", t.getMessage()));
         }
         exceptionHandlerMethodMetadataList.parallelStream().max(Comparator.comparing(WsExceptionHandlerMethodMetadata::getPriority)).ifPresent(metadata -> {
             final Method method = metadata.getMethod();
@@ -104,9 +104,8 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                 break;
             }
         }
-        Assert.checkXorCondition(semaphores == 0, () -> WebsocketMessageEmitter.emit(WsOutboundBean
-                .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
-                .message((String) message.getPayload()), session)
+        Assert.checkXorCondition(semaphores == 0,
+                () -> new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到处理器", message.getPayload()))
         );
     }
 

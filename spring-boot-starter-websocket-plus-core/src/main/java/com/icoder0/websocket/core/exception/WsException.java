@@ -1,9 +1,12 @@
 package com.icoder0.websocket.core.exception;
 
+import lombok.Getter;
+
 /**
  * @author bofa1ex
  * @since 2020/8/22
  */
+@Getter
 public class WsException extends RuntimeException {
 
     private WsBusiCode wsBusiCode;

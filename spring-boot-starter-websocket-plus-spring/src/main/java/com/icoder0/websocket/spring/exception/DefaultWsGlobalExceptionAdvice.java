@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONException;
 import com.icoder0.websocket.annotation.WebsocketAdvice;
 import com.icoder0.websocket.annotation.WebsocketExceptionHandler;
 import com.icoder0.websocket.core.exception.WsBusiCode;
+import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.model.WsOutboundBean;
 import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,14 @@ public class DefaultWsGlobalExceptionAdvice {
     public void handleRuntimeException(WebSocketSession session, RuntimeException e) {
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.INTERNAL_ERROR)
+                .message(e.getMessage()), session
+        );
+    }
+
+    @WebsocketExceptionHandler(WsException.class)
+    public void handleWsException(WebSocketSession session, WsException e) {
+        WebsocketMessageEmitter.emit(WsOutboundBean
+                .status(e.getWsBusiCode())
                 .message(e.getMessage()), session
         );
     }
