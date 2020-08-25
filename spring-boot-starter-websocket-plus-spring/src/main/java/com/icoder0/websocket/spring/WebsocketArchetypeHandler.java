@@ -73,6 +73,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
     public final void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
         final Class<?> outerDecodeClazz = this.getWebsocketPlusProperties().getOuterDecodeClazz();
         int semaphores = this.getMappingMethodMetadataList().size();
+        log.info("Receive [{}] message {}", session.getRemoteAddress() + "@" + session.getId(), message.getPayload());
         for (WsMappingHandlerMethodMetadata wsMappingHandlerMethodMetadata : this.getMappingMethodMetadataList()) {
             final String[] spelExpressions = wsMappingHandlerMethodMetadata.getValue();
             final Method method = wsMappingHandlerMethodMetadata.getMethod();
@@ -80,7 +81,6 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
             try {
                 /* 暂时先不处理除TextMessage以外的类型数据, 没这方面的需求 */
                 if (message instanceof TextMessage) {
-                    log.info("Receive [{}] message {}", session.getRemoteAddress() + "@" + session.getId(), message.getPayload());
                     final TextMessage textMessage = TypeUtils.cast(message, TextMessage.class, ParserConfig.getGlobalInstance());
                     validate(JSON.parseObject(textMessage.getPayload(), outerDecodeClazz), spelExpressions);
                     final Object[] args = processMethodParameters(method.getParameters(), session, textMessage);
