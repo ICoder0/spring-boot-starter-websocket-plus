@@ -143,6 +143,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
                 args[i] = JSON.parseObject(textMessage.getPayload());
                 continue;
             }
+            //TODO 基本类型入参的处理(primitive, CharSequence), 根据@WebsocketRequestParam处理.
             Object innerInboundBean = JSON.parseObject(textMessage.getPayload()).getObject(this.getWebsocketPlusProperties().getInnerDecodeParamKeyName(), parameterType);
             if (AnnotatedElementUtils.hasAnnotation(parameter, Validated.class)) {
                 final BindException errors = new BindException(innerInboundBean, "innerInboundBean");

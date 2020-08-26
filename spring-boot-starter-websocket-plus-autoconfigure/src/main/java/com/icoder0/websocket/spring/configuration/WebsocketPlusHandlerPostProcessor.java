@@ -68,7 +68,8 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                     .filter(method -> _checkMethodParameterValid(method.getParameters()))
                     .map(method -> WsMappingHandlerMethodMetadata.builder()
                             .value(AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).value())
-                            .bean(bean).method(method).build()).collect(Collectors.toList());
+                            .bean(bean).method(method).build())
+                    .collect(Collectors.toList());
             archetypeHandler.setMappingMethodMetadataList(mappingMethodMetadataList);
             archetypeHandler.setLocation(bean.getClass().getPackage().getName());
             websocketProcessorAttributes.getMappingHandlerMethodMetadataMap().put(websocketMapping.mapping(), WsMappingHandlerMetadata
