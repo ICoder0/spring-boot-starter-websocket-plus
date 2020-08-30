@@ -24,7 +24,7 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
  */
 @Configuration
 @ComponentScan("com.icoder0.websocket.spring.exception")
-@EnableAspectJAutoProxy(proxyTargetClass = true)
+@EnableAspectJAutoProxy
 @EnableConfigurationProperties(WebsocketPlusProperties.class)
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class WebsocketPlusAutoConfiguration {
