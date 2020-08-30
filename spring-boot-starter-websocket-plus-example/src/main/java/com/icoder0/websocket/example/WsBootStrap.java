@@ -5,11 +5,14 @@ import com.google.common.collect.ImmutableMap;
 import com.icoder0.websocket.annotation.WebsocketMapping;
 import com.icoder0.websocket.annotation.WebsocketMethodMapping;
 import com.icoder0.websocket.core.model.WsOutboundBean;
+import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.io.IOException;
 
 
@@ -32,13 +35,10 @@ public class WsBootStrap {
     }
 
     @WebsocketMethodMapping("#inbound.code == 1003")
-    public void logout(WebSocketSession webSocketSession) throws IOException {
-        final Long account = (Long) webSocketSession.getAttributes().get("account");
+    public void logout(WebSocketSession webSocketSession, @NotBlank @Size(min = 4, max = 6) String account) {
         log.info("{} logout", account);
-        webSocketSession.sendMessage(new TextMessage(
-                JSON.toJSONString(ImmutableMap.of(
-                        "account", account
-                ))
-        ));
+        WebsocketMessageEmitter.emit(WsOutboundBean.ok(ImmutableMap.of(
+                "account", account
+        )), webSocketSession);
     }
 }
