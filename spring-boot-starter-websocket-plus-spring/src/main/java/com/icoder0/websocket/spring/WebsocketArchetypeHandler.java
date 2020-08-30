@@ -1,34 +1,24 @@
 package com.icoder0.websocket.spring;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.parser.ParserConfig;
-import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
+import com.icoder0.websocket.core.exception.WsRequestParamException;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
-import com.icoder0.websocket.core.utils.Assert;
-import com.icoder0.websocket.core.utils.SpelUtils;
 import com.icoder0.websocket.spring.handler.WsExceptionHandler;
-import com.icoder0.websocket.spring.handler.WsSpelValidationHandler;
 import com.icoder0.websocket.spring.handler.model.WsExceptionHandlerMethodMetadata;
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodMetadata;
-import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.validation.BindException;
-import org.springframework.validation.ValidationUtils;
-import org.springframework.validation.Validator;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.socket.*;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.WebSocketMessage;
+import org.springframework.web.socket.WebSocketSession;
 
-import javax.annotation.Resource;
-import javax.validation.ValidationException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author bofa1ex
@@ -36,15 +26,7 @@ import java.util.stream.Collectors;
  */
 @Data
 @Slf4j
-public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketHandler, WsSpelValidationHandler {
-
-    final String MVC_VALIDATOR_NAME = "mvcValidator";
-
-    @Resource(name = MVC_VALIDATOR_NAME, type = Validator.class)
-    private Validator validator;
-
-    @Resource
-    private WebsocketPlusProperties websocketPlusProperties;
+public class WebsocketArchetypeHandler implements WebSocketHandler {
 
     private List<WsMappingHandlerMethodMetadata> mappingMethodMetadataList;
 
@@ -52,8 +34,7 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
 
     private String location;
 
-    @Override
-    public void handleException(WebSocketSession session, Throwable t) {
+    public final void handleException(WebSocketSession session, Throwable t) {
         this.getExceptionMethodMetadataList().parallelStream()
                 .filter(_metadata -> org.springframework.util.TypeUtils.isAssignable(_metadata.getValue(), t.getClass()))
                 // 按优先级最高的处理器
@@ -68,101 +49,39 @@ public class WebsocketArchetypeHandler implements WsExceptionHandler, WebSocketH
         });
     }
 
-
     @Override
     public final void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
-        final Class<?> outerDecodeClazz = this.getWebsocketPlusProperties().getOuterDecodeClazz();
-        int semaphores = this.getMappingMethodMetadataList().size();
-        log.info("Receive [{}] message {}", session.getRemoteAddress() + "@" + session.getId(), message.getPayload());
+        handleInboundMessage(session, message);
         for (WsMappingHandlerMethodMetadata wsMappingHandlerMethodMetadata : this.getMappingMethodMetadataList()) {
-            final String[] spelExpressions = wsMappingHandlerMethodMetadata.getValue();
             final Method method = wsMappingHandlerMethodMetadata.getMethod();
             final Object target = wsMappingHandlerMethodMetadata.getBean();
             try {
-                /* 暂时先不处理除TextMessage以外的类型数据, 没这方面的需求 */
-                if (message instanceof TextMessage) {
-                    final TextMessage textMessage = TypeUtils.cast(message, TextMessage.class, ParserConfig.getGlobalInstance());
-                    validate(JSON.parseObject(textMessage.getPayload(), outerDecodeClazz), spelExpressions);
-                    final Object[] args = processMethodParameters(method.getParameters(), session, textMessage);
-                    final Object outboundBean = ReflectionUtils.invokeMethod(method, target, args);
-                    if (Objects.isNull(outboundBean)) {
-                        log.warn("no result found after invoke {}", method);
-                        return;
-                    }
-                    log.info("Send [{}] message {}", session.getRemoteAddress() + "@" + session.getId(), outboundBean);
-                    WebsocketMessageEmitter.emit(outboundBean, session);
-                }
+                final Object[] args = wsMappingHandlerMethodMetadata.extractArgs(session, message);
+                final Object outboundBean = ReflectionUtils.invokeMethod(method, target, args);
+                handleOutboundMessage(session, outboundBean);
+                return;
             } catch (WsSpelValidationException ignored) {
-                semaphores -= 1;
+            } catch (WsRequestParamException requestParamException) {
+                handleException(session, requestParamException);
+                return;
             } catch (Throwable e) {
-                e.printStackTrace();
                 handleException(session, e);
                 break;
             }
         }
-        Assert.checkXorCondition(semaphores == 0,
-                () -> new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到处理器", message.getPayload()))
-        );
+        throw new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到处理器", message.getPayload()));
+    }
+
+    public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
+
+    }
+
+    public void handleOutboundMessage(WebSocketSession session, Object outboundBean) {
+
     }
 
     @Override
-    public void validate(Object inboundBean, String... spelExpressions) {
-        final String spelRootName = this.getWebsocketPlusProperties().getSpelRootName();
-        int index = 0;
-        boolean exprMatched = false;
-        do {
-            exprMatched = SpelUtils.builder().context(spelRootName, inboundBean).expr(spelExpressions[index++]).getBooleanResult();
-            if (exprMatched) {
-                break;
-            }
-        } while (index < spelExpressions.length);
-        if (!exprMatched) {
-            throw new WsSpelValidationException();
-        }
-    }
-
-    public Object[] processMethodParameters(Parameter[] parameters, WebSocketSession webSocketSession, TextMessage textMessage) {
-        final Object[] args = new Object[parameters.length];
-        final Class<?> outerDecodeClazz = this.getWebsocketPlusProperties().getOuterDecodeClazz();
-        for (int i = 0; i < parameters.length; i++) {
-            final Parameter parameter = parameters[i];
-            final Class<?> parameterType = parameter.getType();
-            if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, parameterType)) {
-                args[i] = textMessage;
-                continue;
-            }
-            if (org.springframework.util.TypeUtils.isAssignable(WebSocketSession.class, parameterType)) {
-                args[i] = webSocketSession;
-                continue;
-            }
-            if (org.springframework.util.TypeUtils.isAssignable(Map.class, parameterType)) {
-                args[i] = JSON.parseObject(textMessage.getPayload(), Map.class);
-                continue;
-            }
-            if (org.springframework.util.TypeUtils.isAssignable(outerDecodeClazz, parameterType)) {
-                args[i] = JSON.parseObject(textMessage.getPayload());
-                continue;
-            }
-            //TODO 基本类型入参的处理(primitive, CharSequence), 根据@WebsocketRequestParam处理.
-            Object innerInboundBean = JSON.parseObject(textMessage.getPayload()).getObject(this.getWebsocketPlusProperties().getInnerDecodeParamKeyName(), parameterType);
-            if (AnnotatedElementUtils.hasAnnotation(parameter, Validated.class)) {
-                final BindException errors = new BindException(innerInboundBean, "innerInboundBean");
-                ValidationUtils.invokeValidator(validator, innerInboundBean, errors);
-                final String errorJsonMessage = errors.getFieldErrors().parallelStream()
-                        .map(fieldError -> fieldError.getField() + fieldError.getDefaultMessage())
-                        .limit(1)
-                        .collect(Collectors.joining());
-                if (errors.hasErrors()) {
-                    throw new ValidationException(errorJsonMessage);
-                }
-            }
-            args[i] = innerInboundBean;
-        }
-        return args;
-    }
-
-    @Override
-    public final void handleTransportError(WebSocketSession session, Throwable e) {
+    public void handleTransportError(WebSocketSession session, Throwable e) {
         handleException(session, e);
     }
 

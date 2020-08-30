@@ -20,10 +20,16 @@ public class WebsocketMessageArchetypeAspect {
     @Autowired
     private WebsocketMessageAspectHandler websocketMessageAspectHandler;
 
-    @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.handleMessage(..))" +
+    @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.handleInboundMessage(..))" +
             "&& args(session, message)", argNames = "session, message")
-    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
-        websocketMessageAspectHandler.handleMessage(session, message);
+    public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
+        websocketMessageAspectHandler.handleInboundMessage(session, message);
+    }
+
+    @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.handleOutboundMessage(..))" +
+            "&& args(session, outboundBean)", argNames = "session, outboundBean")
+    public void handleOutboundMessage(WebSocketSession session, Object outboundBean) {
+        websocketMessageAspectHandler.handleOutboundMessage(session, outboundBean);
     }
 
     @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.afterConnectionEstablished(..))" +

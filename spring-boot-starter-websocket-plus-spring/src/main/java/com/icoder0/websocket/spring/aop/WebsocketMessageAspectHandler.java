@@ -11,7 +11,9 @@ import org.springframework.web.socket.WebSocketSession;
  */
 public interface WebsocketMessageAspectHandler {
 
-    void handleMessage(WebSocketSession session, WebSocketMessage<?> message);
+    void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message);
+
+    void handleOutboundMessage(WebSocketSession session, Object outboundBean);
 
     void afterConnectionClosed(WebSocketSession session, CloseStatus status);
 
