@@ -23,6 +23,7 @@ public class DefaultWsGlobalExceptionAdvice {
 
     @WebsocketExceptionHandler(value = Throwable.class, priority = Integer.MIN_VALUE)
     public void handleRootException(WebSocketSession session, Throwable e) {
+        log.error("[Throwable]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.INTERNAL_ERROR)
                 .message(e.getMessage()), session
@@ -31,6 +32,7 @@ public class DefaultWsGlobalExceptionAdvice {
 
     @WebsocketExceptionHandler(WsException.class)
     public void handleWsException(WebSocketSession session, WsException e) {
+        log.error("[WsException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(e.getWsBusiCode())
                 .message(e.getMessage()), session
@@ -39,6 +41,7 @@ public class DefaultWsGlobalExceptionAdvice {
 
     @WebsocketExceptionHandler(JSONException.class)
     public void handleJsonException(WebSocketSession session, JSONException e) {
+        log.error("[JSONException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
                 .message("json解析有误, " + e.getMessage()), session
@@ -47,6 +50,7 @@ public class DefaultWsGlobalExceptionAdvice {
 
     @WebsocketExceptionHandler(ValidationException.class)
     public void handleValidationException(WebSocketSession session, ValidationException e) {
+        log.error("[ValidationException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
                 .message("校验失败, " + e.getMessage()), session
@@ -55,6 +59,7 @@ public class DefaultWsGlobalExceptionAdvice {
 
     @WebsocketExceptionHandler(SpelEvaluationException.class)
     public void handleSpelEvaluationException(WebSocketSession session, SpelEvaluationException e) {
+        log.error("[SpelEvaluationException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
                 .message("spel解析有误, " + e.getMessage()), session
