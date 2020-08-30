@@ -27,9 +27,9 @@ public enum WsBusiCode {
         this.enMsg = enMsg;
     }
 
-    private String code;
-    private String zhMsg;
-    private String enMsg;
+    private final String code;
+    private final String zhMsg;
+    private final String enMsg;
 
     public static Map<String,Object> mapper(WsBusiCode code, Object data){
         return ImmutableMap.of(
