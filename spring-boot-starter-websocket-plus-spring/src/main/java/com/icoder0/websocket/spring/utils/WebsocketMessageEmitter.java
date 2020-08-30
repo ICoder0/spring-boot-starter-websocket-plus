@@ -17,8 +17,10 @@ import java.io.IOException;
 public class WebsocketMessageEmitter {
 
     public void emit(Object data, WebSocketSession session) {
+        final String json = JSON.toJSONString(data);
+        log.info("{} OUTBOUND {}", session.getRemoteAddress() + "@" + session.getId(), json);
         try {
-            session.sendMessage(new TextMessage(JSON.toJSONString(data)));
+            session.sendMessage(new TextMessage(json));
         } catch (IOException e) {
             log.error("{} send message {} error", session, data);
         }
