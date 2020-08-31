@@ -26,7 +26,7 @@ public class WsBootStrap{
                 "hello", "world"
         ));
     }
-    返参会自动装配成下行TextMessage类型并下发.
+    // 返参会自动装配成下行TextMessage类型并下发.
 }
 ```
 
