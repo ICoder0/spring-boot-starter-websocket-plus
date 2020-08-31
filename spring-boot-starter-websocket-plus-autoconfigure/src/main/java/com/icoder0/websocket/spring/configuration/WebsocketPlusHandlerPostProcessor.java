@@ -5,7 +5,6 @@ import com.icoder0.websocket.annotation.WebsocketMethodMapping;
 import com.icoder0.websocket.annotation.WebsocketRequestParam;
 import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
-import com.icoder0.websocket.core.utils.Assert;
 import com.icoder0.websocket.spring.WebsocketArchetypeHandler;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMetadata;
@@ -13,7 +12,6 @@ import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodMetadata
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodParameterMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -26,10 +24,8 @@ import org.springframework.core.MethodIntrospector;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.TypeUtils;
 import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import javax.annotation.Resource;
@@ -37,10 +33,7 @@ import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -50,15 +43,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAware, BeanPostProcessor {
-
-    final String MVC_VALIDATOR_NAME = "mvcValidator";
-
-    /**
-     * 不设置懒加载的话, 会导致MVC#resourceHandlerMapping预先注入容器, 导致找不到ServletContext.
-     */
-    @Lazy
-    @Resource(name = MVC_VALIDATOR_NAME, type = Validator.class)
-    private Validator validator;
 
     @Autowired(required = false)
     private List<HandshakeInterceptor> handshakeInterceptors;
@@ -85,7 +69,6 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                             .parameters(_mapperMethodParameters(method))
                             .outerDecodeClazz(websocketPlusProperties.getOuterDecodeClazz())
                             .spelRootName(websocketPlusProperties.getSpelRootName())
-                            .validator(validator)
                             .method(method)
                             .bean(bean)
                             .build())
@@ -121,7 +104,6 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
             String parameterName = parameter.getName();
             String parameterDefaultValue = null;
             boolean needValidated = false;
-
             // check parameter whether need nest-validate.
             for (Annotation annotation : parameter.getAnnotations()) {
                 final WebsocketRequestParam websocketRequestParam = AnnotationUtils.getAnnotation(annotation, WebsocketRequestParam.class);
@@ -131,11 +113,6 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                 }
                 if (AnnotatedElementUtils.hasAnnotation(parameter, Validated.class)) {
                     needValidated = true;
-                    break;
-                }
-                if ("javax.validation.constraints".equalsIgnoreCase(annotation.annotationType().getPackage().getName())) {
-                    needValidated = true;
-                    break;
                 }
             }
             parameterMetadataList.add(WsMappingHandlerMethodParameterMetadata.builder()
