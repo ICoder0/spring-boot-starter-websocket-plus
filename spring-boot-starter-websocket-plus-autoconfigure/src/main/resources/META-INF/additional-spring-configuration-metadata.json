@@ -2,7 +2,7 @@
   "groups": [
     {
       "name": "websocket-plus",
-      "type": "com.icoder0.websocket.core.annotation.WebsocketPlusProperties",
+      "type": "com.icoder0.websocket.spring.WebsocketPlusProperties",
       "description": "Description for websocket-plus."
     }
   ],
