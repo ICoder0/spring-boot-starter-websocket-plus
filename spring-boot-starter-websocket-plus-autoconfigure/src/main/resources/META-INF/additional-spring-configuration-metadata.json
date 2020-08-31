@@ -40,7 +40,6 @@
     {
       "name": "websocket-plus.allowedOrigins",
       "defaultValue": ["*"],
-      "sourceType": "com.icoder0.websocket.core.annotation.WebsocketPlusProperties",
       "description": "跨域origins集合"
     },
     {
