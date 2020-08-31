@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.icoder0</groupId>
             <artifactId>spring-boot-starter-websocket-plus-autoconfigure</artifactId>
-            <version>0.1.2</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>
