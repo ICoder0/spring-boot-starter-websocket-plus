@@ -44,7 +44,7 @@ public class DefaultWsGlobalExceptionAdvice {
         log.error("[JSONException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
-                .message("json解析有误, " + e.getMessage()), session
+                .message("json解析失败, " + e.getMessage()), session
         );
     }
 
@@ -53,7 +53,7 @@ public class DefaultWsGlobalExceptionAdvice {
         log.error("[ValidationException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
-                .message("校验失败, " + e.getMessage()), session
+                .message("violation校验失败, " + e.getMessage()), session
         );
     }
 
@@ -62,7 +62,7 @@ public class DefaultWsGlobalExceptionAdvice {
         log.error("[SpelEvaluationException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
-                .message("spel解析有误, " + e.getMessage()), session
+                .message("spel解析失败, " + e.getMessage()), session
         );
     }
 }
