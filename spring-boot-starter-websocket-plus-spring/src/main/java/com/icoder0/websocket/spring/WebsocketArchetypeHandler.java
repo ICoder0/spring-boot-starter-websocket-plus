@@ -61,15 +61,12 @@ public class WebsocketArchetypeHandler implements WebSocketHandler {
                 handleOutboundMessage(session, outboundBean);
                 return;
             } catch (WsSpelValidationException ignored) {
-            } catch (WsRequestParamException requestParamException) {
+            } catch (Throwable requestParamException) {
                 handleException(session, requestParamException);
                 return;
-            } catch (Throwable e) {
-                handleException(session, e);
-                break;
             }
         }
-        throw new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到处理器", message.getPayload()));
+        handleException(session, new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到WebsocketMethodMapping", message.getPayload())));
     }
 
     public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
