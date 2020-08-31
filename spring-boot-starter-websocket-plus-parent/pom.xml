@@ -46,6 +46,7 @@
         <guava.version>28.2-jre</guava.version>
         <bouncycastyle.version>1.64</bouncycastyle.version>
         <aspectj.version>1.9.5</aspectj.version>
+        <netty.buffer.version>4.1.48.Final</netty.buffer.version>
     </properties>
 
     <dependencyManagement>
@@ -97,6 +98,11 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>${bouncycastyle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${netty.buffer.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
