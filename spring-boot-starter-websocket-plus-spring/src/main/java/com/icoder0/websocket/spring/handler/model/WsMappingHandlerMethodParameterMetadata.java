@@ -4,14 +4,14 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
+import com.icoder0.websocket.core.exception.WsBusiCode;
+import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.exception.WsRequestParamException;
 import com.icoder0.websocket.core.utils.Assert;
+import io.netty.buffer.*;
 import lombok.Builder;
-import org.springframework.validation.ValidationUtils;
-import org.springframework.web.socket.BinaryMessage;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketMessage;
-import org.springframework.web.socket.WebSocketSession;
+import lombok.Getter;
+import org.springframework.web.socket.*;
 
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
@@ -33,6 +33,7 @@ public class WsMappingHandlerMethodParameterMetadata {
     private final String parameterDefaultValue;
 
     private final Class<?> parameterType;
+    @Getter
     private final boolean validated;
 
     public Object extractArg(WebSocketSession session, WebSocketMessage<?> webSocketMessage) {
@@ -68,22 +69,30 @@ public class WsMappingHandlerMethodParameterMetadata {
         }
 
 
-        // binary message
-        if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, parameterType)) {
-            return webSocketMessage;
-        }
-        if (org.springframework.util.TypeUtils.isAssignable(ByteBuffer.class, parameterType)) {
-            if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, parameterType)) {
-                return webSocketMessage.getPayload();
+        // Binary message
+        if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, webSocketMessage.getClass())) {
+            final BinaryMessage binaryMessage = TypeUtils.cast(webSocketMessage, BinaryMessage.class, ParserConfig.getGlobalInstance());
+
+            if (org.springframework.util.TypeUtils.isAssignable(ByteBuffer.class, parameterType)) {
+                return binaryMessage.getPayload();
             }
-        }
-        if (org.springframework.util.TypeUtils.isAssignable(byte[].class, parameterType)) {
-            if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, parameterType)) {
-                final BinaryMessage binaryMessage = TypeUtils.cast(webSocketMessage, BinaryMessage.class, ParserConfig.getGlobalInstance());
+            if (org.springframework.util.TypeUtils.isAssignable(ByteBuf.class, parameterType)) {
+                return ByteBufAllocator.DEFAULT.directBuffer().readBytes(binaryMessage.getPayload());
+            }
+            if (org.springframework.util.TypeUtils.isAssignable(byte[].class, parameterType)) {
                 return binaryMessage.getPayload().array();
             }
+            return binaryMessage;
         }
 
-        return null;
+
+        if (org.springframework.util.TypeUtils.isAssignable(PingMessage.class, parameterType)) {
+            return webSocketMessage;
+        }
+        if (org.springframework.util.TypeUtils.isAssignable(PongMessage.class, parameterType)) {
+            return webSocketMessage;
+        }
+
+        throw new WsException(WsBusiCode.INTERNAL_ERROR, "抽取参数#不存在该情况");
     }
 }
