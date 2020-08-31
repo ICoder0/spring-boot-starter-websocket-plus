@@ -22,10 +22,9 @@ public class WsBootStrap{
     public WsOutboundBean login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
         log.info("login {}", req);
         webSocketSession.getAttributes().put("account", req.getAccount());
-        return WsOutboundBean.ok()
-                .body(ImmutableMap.of(
-                        "hello", "world"
-                ));
+        return WsOutboundBean.ok().body(ImmutableMap.of(
+                "hello", "world"
+        ));
     }
     返参会自动装配成下行TextMessage类型并下发.
 }
