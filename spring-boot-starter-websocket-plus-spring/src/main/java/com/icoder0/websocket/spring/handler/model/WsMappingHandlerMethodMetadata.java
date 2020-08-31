@@ -8,16 +8,14 @@ import com.icoder0.websocket.core.utils.Assert;
 import com.icoder0.websocket.core.utils.SpelUtils;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.validation.BindException;
-import org.springframework.validation.ValidationUtils;
 import org.springframework.web.socket.*;
 
-import org.springframework.validation.Validator;
 
-import javax.validation.ValidationException;
+import javax.validation.*;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -42,25 +40,35 @@ public class WsMappingHandlerMethodMetadata {
     @Getter
     private final Object bean;
 
-    private final Validator validator;
+    private static final Validator validator;
+
 
     public Object[] extractArgs(WebSocketSession session, WebSocketMessage<?> message) {
         _checkSpelValid(message);
         Object[] args = new Object[parameters.size()];
         for (int i = 0; i < parameters.size(); i++) {
-            final Object validateBean = parameters.get(i).extractArg(session, message);
-            final BindException errors = new BindException(validateBean, "validateBean");
-            ValidationUtils.invokeValidator(validator, validateBean, errors);
-            final String errorJsonMessage = errors.getFieldErrors().parallelStream()
-                    .map(fieldError -> fieldError.getField() + fieldError.getDefaultMessage())
-                    .limit(1)
-                    .collect(Collectors.joining());
-            if (errors.hasErrors()) {
-                throw new ValidationException(errorJsonMessage);
+            final WsMappingHandlerMethodParameterMetadata parameter = parameters.get(i);
+            final Object validateBean = parameter.extractArg(session, message);
+            if (parameter.isValidated()) {
+                Optional.ofNullable(validator.validate(validateBean)).ifPresent(this::_checkViolations);
             }
             args[i] = validateBean;
         }
+        Optional.ofNullable(validator.forExecutables().validateParameters(bean, method, args)).ifPresent(this::_checkViolations);
         return args;
+    }
+
+    void _checkViolations(Set<ConstraintViolation<Object>> constraintViolations) {
+        final String errorJsonMessage = constraintViolations.parallelStream()
+                .map(constraintViolation -> constraintViolation.getRootBean().toString() + "#" +
+                        constraintViolation.getPropertyPath() + ":=" + constraintViolation.getInvalidValue() + " IS NOT VALID " +
+                        "#REQUIRE {" + constraintViolation.getMessage() + "}"
+                )
+                .limit(1)
+                .collect(Collectors.joining());
+        if (!constraintViolations.isEmpty()) {
+            throw new ValidationException(errorJsonMessage);
+        }
     }
 
     void _checkSpelValid(WebSocketMessage<?> message) {
@@ -80,10 +88,16 @@ public class WsMappingHandlerMethodMetadata {
         boolean exprMatched = false;
         do {
             exprMatched = SpelUtils.builder().context(spelRootName, validateBean).expr(value[index++]).getBooleanResult();
-            if (exprMatched) {
+            // 如果出现false, 则不符合condition.
+            if (!exprMatched) {
                 break;
             }
         } while (index < value.length);
         Assert.checkCondition(exprMatched, (Supplier<WsSpelValidationException>) WsSpelValidationException::new);
+    }
+
+    static {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
     }
 }
