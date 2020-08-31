@@ -16,8 +16,8 @@ import java.util.Objects;
 @Slf4j
 public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAspectHandler {
 
-    static String sessionAddress(WebSocketSession session){
-        return session.getRemoteAddress() + "@" + session.getId();
+    static String sessionAddress(WebSocketSession session) {
+        return session.getRemoteAddress() + "@" + session.getId().substring(0, 4);
     }
 
     @Override

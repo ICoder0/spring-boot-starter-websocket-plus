@@ -18,7 +18,7 @@ public class WebsocketMessageEmitter {
 
     public void emit(Object data, WebSocketSession session) {
         final String json = JSON.toJSONString(data);
-        log.info("{} OUTBOUND {}", session.getRemoteAddress() + "@" + session.getId(), json);
+        log.info("{} OUTBOUND {}", session.getRemoteAddress() + "@" + session.getId().substring(0, 4), json);
         try {
             session.sendMessage(new TextMessage(json));
         } catch (IOException e) {
