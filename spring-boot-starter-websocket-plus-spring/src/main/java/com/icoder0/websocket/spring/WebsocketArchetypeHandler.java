@@ -2,9 +2,7 @@ package com.icoder0.websocket.spring;
 
 import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
-import com.icoder0.websocket.core.exception.WsRequestParamException;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
-import com.icoder0.websocket.spring.handler.WsExceptionHandler;
 import com.icoder0.websocket.spring.handler.model.WsExceptionHandlerMethodMetadata;
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodMetadata;
 import lombok.Data;
