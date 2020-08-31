@@ -8,7 +8,7 @@
     <dependency>
         <groupId>com.icoder0</groupId>
         <artifactId>spring-boot-starter-websocket-plus</artifactId>
-        <version>0.1.1</version>
+        <version>${latest.version}</version>
     </dependency>
 </dependencies>
 ```
