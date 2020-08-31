@@ -10,7 +10,7 @@
     {
       "name": "websocket-plus.asyncSendTimeout",
       "type": "java.lang.Long",
-      "defaultValue": 3000,
+      "defaultValue": 5000,
       "description": "async send timeout"
     },
     {
@@ -38,7 +38,7 @@
       "description": "是否需要开启sockjs"
     },
     {
-      "name": "websocket-plus.allowedOrigins",
+      "name": "websocket-plus.origins",
       "defaultValue": ["*"],
       "description": "跨域origins集合"
     },
@@ -55,10 +55,10 @@
       "description": "最大二进制内容缓冲区大小限制"
     },
     {
-      "name": "websocket-plus.messageReqName",
+      "name": "websocket-plus.spelRootName",
       "type": "java.lang.String",
-      "defaultValue": "req",
-      "description": "最大二进制内容缓冲区大小限制"
+      "defaultValue": "inbound",
+      "description": "WebsocketMethodMapping属性value中的context变量名"
     }
   ]
 }
