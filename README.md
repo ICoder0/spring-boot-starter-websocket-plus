@@ -30,4 +30,22 @@ public class WsBootStrap{
 }
 ```
 
+配置清单application.yml
+
+```yml
+websocket-plus:
+  asyncSendTimeout: 8000
+  maxSessionIdleTimeout: 66000
+  # 上行外层数据格式 like {"seq":0,"version":0,"params":{},"code":1001}, 默认WsInboundBean.
+  outerDecodeClazz: com.icoder0.mirai4j.websocket.model.WsInboundBeanEx
+  maxTextMessageBufferSize: 20480
+  maxBinaryMessageBufferSize: 20480
+  # 上行内层数据的key like {..., "params": {"account":123123}, ...}
+  innerDecodeParamKeyName: params
+  # @WebsocketMethodMapping(expr="#req.code == 1001")
+  spelRootName: req
+  allowedOrigins:
+    - http://test.domain.com
+```
+
 如有需求提issue.
