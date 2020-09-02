@@ -30,43 +30,45 @@ public class WsMappingHandlerMethodParameterMetadata {
     private final String innerDecodeParamKeyName;
 
     private final Method method;
-    private final String parameterName;
-    private final String parameterDefaultValue;
+    private final String name;
+    private final String defaultValue;
+    private final boolean require;
 
-    private final Class<?> parameterType;
+    private final Class<?> type;
     @Getter
     private final boolean validated;
 
     public Object extractArg(WebSocketSession session, WebSocketMessage<?> webSocketMessage) {
-        if (org.springframework.util.TypeUtils.isAssignable(WebSocketSession.class, parameterType)) {
+        if (org.springframework.util.TypeUtils.isAssignable(WebSocketSession.class, type)) {
             return session;
         }
         // Text message
         if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, webSocketMessage.getClass())) {
             final TextMessage textMessage = TypeUtils.cast(webSocketMessage, TextMessage.class, ParserConfig.getGlobalInstance());
-            if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, parameterType)) {
+            if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, type)) {
                 return webSocketMessage;
             }
-            // 基本类型
-            if (ClassUtils.isPrimitiveOrWrapper(parameterType) || org.springframework.util.TypeUtils.isAssignable(CharSequence.class, parameterType)) {
+            // primitive type
+            if (ClassUtils.isPrimitiveOrWrapper(type) || org.springframework.util.TypeUtils.isAssignable(CharSequence.class, type)) {
                 final JSONObject payload = Optional.ofNullable(JSON.parseObject(textMessage.getPayload()))
                         .orElseThrow(() -> new WsRequestParamException("检查payload规范"));
                 final JSONObject payloadParams = Optional.ofNullable(payload.getJSONObject(innerDecodeParamKeyName))
                         .orElseThrow(() -> new WsRequestParamException("检查payload#params规范"));
-                Assert.checkCondition(payloadParams.containsKey(parameterName),
-                        () -> new WsRequestParamException(method.toString())
+                // payload params require to contain parameter ?
+                Assert.checkXorCondition(!payloadParams.containsKey(name) && require,
+                        () -> new WsRequestParamException(method.getName() + "#" + name + " is required!")
                 );
-                return payloadParams.getObject(parameterName, parameterType);
+                return payloadParams.getObject(name, type);
             }
-            if (org.springframework.util.TypeUtils.isAssignable(Map.class, parameterType)) {
+            if (org.springframework.util.TypeUtils.isAssignable(Map.class, type)) {
                 return JSON.parseObject(textMessage.getPayload(), Map.class);
             }
-            if (org.springframework.util.TypeUtils.isAssignable(outerDecodeClazz, parameterType)) {
+            if (org.springframework.util.TypeUtils.isAssignable(outerDecodeClazz, type)) {
                 return JSON.parseObject(textMessage.getPayload(), outerDecodeClazz);
             }
             final JSONObject payload = Optional.ofNullable(JSON.parseObject(textMessage.getPayload()))
                     .orElseThrow(() -> new WsRequestParamException("检查payload规范"));
-            return payload.getObject(innerDecodeParamKeyName, parameterType);
+            return payload.getObject(innerDecodeParamKeyName, type);
         }
 
 
@@ -74,23 +76,23 @@ public class WsMappingHandlerMethodParameterMetadata {
         if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, webSocketMessage.getClass())) {
             final BinaryMessage binaryMessage = TypeUtils.cast(webSocketMessage, BinaryMessage.class, ParserConfig.getGlobalInstance());
 
-            if (org.springframework.util.TypeUtils.isAssignable(ByteBuffer.class, parameterType)) {
+            if (org.springframework.util.TypeUtils.isAssignable(ByteBuffer.class, type)) {
                 return binaryMessage.getPayload();
             }
-            if (org.springframework.util.TypeUtils.isAssignable(ByteBuf.class, parameterType)) {
+            if (org.springframework.util.TypeUtils.isAssignable(ByteBuf.class, type)) {
                 return ByteBufAllocator.DEFAULT.directBuffer().readBytes(binaryMessage.getPayload());
             }
-            if (org.springframework.util.TypeUtils.isAssignable(byte[].class, parameterType)) {
+            if (org.springframework.util.TypeUtils.isAssignable(byte[].class, type)) {
                 return binaryMessage.getPayload().array();
             }
             return binaryMessage;
         }
 
 
-        if (org.springframework.util.TypeUtils.isAssignable(PingMessage.class, parameterType)) {
+        if (org.springframework.util.TypeUtils.isAssignable(PingMessage.class, type)) {
             return webSocketMessage;
         }
-        if (org.springframework.util.TypeUtils.isAssignable(PongMessage.class, parameterType)) {
+        if (org.springframework.util.TypeUtils.isAssignable(PongMessage.class, type)) {
             return webSocketMessage;
         }
 
