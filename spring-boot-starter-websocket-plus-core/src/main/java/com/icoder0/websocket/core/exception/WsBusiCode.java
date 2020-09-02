@@ -1,9 +1,6 @@
 package com.icoder0.websocket.core.exception;
 
-import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
-
-import java.util.Map;
 
 /**
  * @author bofa1ex
@@ -30,18 +27,4 @@ public enum WsBusiCode {
     private final String code;
     private final String zhMsg;
     private final String enMsg;
-
-    public static Map<String,Object> mapper(WsBusiCode code, Object data){
-        return ImmutableMap.of(
-                "code", code.getCode(),
-                "data", data
-        );
-    }
-
-    public static Map<String,Object> mapper(WsBusiCode code, String message){
-        return ImmutableMap.of(
-                "code", code.getCode(),
-                "message", String.format(code.getZhMsg(), message)
-        );
-    }
 }
