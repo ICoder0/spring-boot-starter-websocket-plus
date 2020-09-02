@@ -11,6 +11,7 @@ import com.icoder0.websocket.core.utils.Assert;
 import io.netty.buffer.*;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.util.ClassUtils;
 import org.springframework.web.socket.*;
 
 import java.lang.reflect.Method;
@@ -47,7 +48,7 @@ public class WsMappingHandlerMethodParameterMetadata {
                 return webSocketMessage;
             }
             // 基本类型
-            if (parameterType.isPrimitive() || org.springframework.util.TypeUtils.isAssignable(CharSequence.class, parameterType)) {
+            if (ClassUtils.isPrimitiveOrWrapper(parameterType) || org.springframework.util.TypeUtils.isAssignable(CharSequence.class, parameterType)) {
                 final JSONObject payload = Optional.ofNullable(JSON.parseObject(textMessage.getPayload()))
                         .orElseThrow(() -> new WsRequestParamException("检查payload规范"));
                 final JSONObject payloadParams = Optional.ofNullable(payload.getJSONObject(innerDecodeParamKeyName))
