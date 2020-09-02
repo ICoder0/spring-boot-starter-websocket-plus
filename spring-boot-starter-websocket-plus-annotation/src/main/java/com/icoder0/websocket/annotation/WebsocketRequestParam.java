@@ -27,5 +27,7 @@ public @interface WebsocketRequestParam {
     @AliasFor("value")
     String name() default "";
 
+    boolean required() default true;
+
     String defaultValue() default "";
 }
