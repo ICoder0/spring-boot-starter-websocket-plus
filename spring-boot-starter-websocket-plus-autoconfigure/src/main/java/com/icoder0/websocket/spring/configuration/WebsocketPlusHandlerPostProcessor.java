@@ -54,7 +54,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
 
     private ConfigurableListableBeanFactory beanFactory;
 
-    private final Set<String> methodExpressions = new HashSet<>();
+    private final Map<String, Method> methodExpressions = new HashMap<>();
 
     @Override
     public Object postProcessAfterInitialization(@NotNull Object bean, @NotNull String beanName) throws BeansException {
@@ -88,16 +88,6 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
         return bean;
     }
 
-    private void _checkMethodMappingExpressionValid(Method method) {
-        final String[] expressions = AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).value();
-        final String key = Arrays.stream(expressions).parallel()
-                .map(expression -> DigestUtils.md5DigestAsHex(expression.getBytes()))
-                .collect(Collectors.joining("&"));
-        if (methodExpressions.contains(key)) {
-            throw new WsExpressionException(String.format("@WebsocketMethodMapping#expression [%s]冲突, 编译不通过!", Arrays.toString(expressions)));
-        }
-    }
-
 
     @Override
     public void setApplicationContext(@NotNull ApplicationContext applicationContext) throws BeansException {
@@ -109,6 +99,18 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
         if (!parameters[0].isNamePresent()) {
             throw new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, "获取不到方法参数的真实参数名, 需要指定compiler参数 -parameters");
         }
+    }
+
+    void _checkMethodMappingExpressionValid(Method method) {
+        final String[] expressions = AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).value();
+        final String key = Arrays.stream(expressions)
+                .map(expression -> DigestUtils.md5DigestAsHex(expression.getBytes()))
+                .collect(Collectors.joining("&"));
+        if (methodExpressions.containsKey(key)) {
+            final Method existMethod = methodExpressions.get(key);
+            throw new WsExpressionException(String.format("[%s] @WebsocketMethodMapping#expression %s冲突, 已存在方法[%s]", method, Arrays.toString(expressions), existMethod));
+        }
+        methodExpressions.put(key, method);
     }
 
     List<WsMappingHandlerMethodParameterMetadata> _mapperMethodParameters(Method method) {

@@ -11,7 +11,6 @@ public class WsExpressionException extends WsException {
     }
 
     public WsExpressionException(String message, Throwable cause) {
-        super(WsBusiCode.ILLEGAL_REQUEST_ERROR, "#EXPRESSION#" + "\n" +
-                message, cause);
+        super(WsBusiCode.ILLEGAL_REQUEST_ERROR, message, cause);
     }
 }
