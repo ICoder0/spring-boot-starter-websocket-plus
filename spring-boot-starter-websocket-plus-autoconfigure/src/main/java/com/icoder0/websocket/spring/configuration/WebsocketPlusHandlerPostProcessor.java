@@ -6,6 +6,7 @@ import com.icoder0.websocket.annotation.WebsocketRequestParam;
 import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.exception.WsExpressionException;
+import com.icoder0.websocket.core.exception.WsMappingPrototypeException;
 import com.icoder0.websocket.spring.WebsocketArchetypeHandler;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMetadata;
@@ -13,6 +14,7 @@ import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodMetadata
 import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodParameterMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -58,19 +60,19 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
 
     @Override
     public Object postProcessAfterInitialization(@NotNull Object bean, @NotNull String beanName) throws BeansException {
-        final Class<?> beanClazz = bean.getClass();
+        final Class<?> beanClazz = AopProxyUtils.ultimateTargetClass(bean);
         final WebsocketMapping websocketMapping = AnnotationUtils.findAnnotation(bean.getClass(), WebsocketMapping.class);
+        final Map<String, WsMappingHandlerMetadata> mappingHandlerMethodMetadataMap = websocketProcessorAttributes.getMappingHandlerMethodMetadataMap();
         if (Objects.isNull(websocketMapping)) {
             return bean;
         }
-        /* @Aspect代理类, 会在createBean实例后自动织入cglib/jdk代理. */
-        final WebsocketArchetypeHandler archetypeHandler = beanFactory.createBean(WebsocketArchetypeHandler.class);
+        final String mapping = websocketMapping.mapping();
         final List<WsMappingHandlerMethodMetadata> mappingMethodMetadataList = MethodIntrospector.selectMethods(beanClazz,
                 (ReflectionUtils.MethodFilter) method -> AnnotatedElementUtils.hasAnnotation(method, WebsocketMethodMapping.class)).parallelStream()
                 .peek(this::_checkMethodMappingExpressionValid)
                 .peek(method -> _checkMethodParameterValid(method.getParameters()))
                 .map(method -> WsMappingHandlerMethodMetadata.builder()
-                        .value(AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).value())
+                        .value(AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).expr())
                         .parameters(_mapperMethodParameters(method))
                         .outerDecodeClazz(websocketPlusProperties.getOuterDecodeClazz())
                         .spelRootName(websocketPlusProperties.getSpelRootName())
@@ -78,13 +80,26 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                         .bean(bean)
                         .build())
                 .collect(Collectors.toList());
-        archetypeHandler.setMappingMethodMetadataList(mappingMethodMetadataList);
-        archetypeHandler.setLocation(bean.getClass().getPackage().getName());
-        websocketProcessorAttributes.getMappingHandlerMethodMetadataMap().put(websocketMapping.mapping(), WsMappingHandlerMetadata
-                .builder()
-                .archetypeHandler(archetypeHandler)
-                .wsMappingHandlerMethodMetadatas(mappingMethodMetadataList)
-                .build());
+        // 如果路由已经存在, 判断是否支持prototype.
+        if (mappingHandlerMethodMetadataMap.containsKey(mapping) && !websocketMapping.prototype()) {
+            throw new WsMappingPrototypeException(String.format("已注册ws路由 %s", mapping));
+        }
+        mappingHandlerMethodMetadataMap.compute(mapping, (k, metadata) -> {
+            if (Objects.isNull(metadata)) {
+                /* @Aspect代理类, 会在createBean实例后自动织入cglib/jdk代理. */
+                final WebsocketArchetypeHandler archetypeHandler = beanFactory.createBean(WebsocketArchetypeHandler.class);
+                archetypeHandler.setMappingMethodMetadataList(mappingMethodMetadataList);
+                archetypeHandler.setLocation(bean.getClass().getPackage().getName());
+                return WsMappingHandlerMetadata.builder()
+                        .archetypeHandler(archetypeHandler)
+                        .wsMappingHandlerMethodMetadatas(mappingMethodMetadataList)
+                        .build();
+            }
+            metadata.getWsMappingHandlerMethodMetadatas().addAll(mappingMethodMetadataList);
+            // override old method metadata
+            metadata.getArchetypeHandler().setMappingMethodMetadataList(metadata.getWsMappingHandlerMethodMetadatas());
+            return metadata;
+        });
         return bean;
     }
 

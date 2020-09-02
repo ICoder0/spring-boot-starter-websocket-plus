@@ -18,8 +18,10 @@ public @interface WebsocketMapping {
     String name() default "";
 
     @AliasFor("mapping")
-    String[] value() default {"true"};
+    String value();
 
     @AliasFor("value")
-    String[] mapping() default {"true"};
+    String mapping() default "";
+
+    boolean prototype() default false;
 }

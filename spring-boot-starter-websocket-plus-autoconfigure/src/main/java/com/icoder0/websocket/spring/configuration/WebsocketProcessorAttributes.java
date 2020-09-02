@@ -12,5 +12,5 @@ import java.util.Map;
  */
 @Data
 public class WebsocketProcessorAttributes {
-    private final Map<String[], WsMappingHandlerMetadata> mappingHandlerMethodMetadataMap = new HashMap<>(2 >> 6);
+    private final Map<String, WsMappingHandlerMetadata> mappingHandlerMethodMetadataMap = new HashMap<>(2 >> 6);
 }
