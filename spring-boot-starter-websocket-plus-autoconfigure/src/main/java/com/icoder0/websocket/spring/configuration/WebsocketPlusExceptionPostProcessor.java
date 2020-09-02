@@ -31,31 +31,32 @@ public class WebsocketPlusExceptionPostProcessor implements ApplicationContextAw
     @Autowired
     private WebsocketProcessorAttributes websocketProcessorAttributes;
 
-    private final Map<String[], List<WsExceptionHandlerMethodMetadata>> exceptionHandlerMethodMetadataMap = new HashMap<>(2 >> 3);
+    private final Map<String[], List<WsExceptionHandlerMethodMetadata>> exceptionHandlerMethodMetadataMap = new HashMap<>(2 >> 4);
 
     @Override
     public Object postProcessAfterInitialization(@NotNull Object bean, @NotNull String beanName) throws BeansException {
         final Class<?> beanClazz = AopProxyUtils.ultimateTargetClass(bean);
-        Optional.ofNullable(AnnotationUtils.findAnnotation(bean.getClass(), WebsocketAdvice.class)).ifPresent(websocketAdvice -> {
-            final int advicePriority = websocketAdvice.priority();
-            final List<WsExceptionHandlerMethodMetadata> wsExceptionHandlerMethodMetadataList = MethodIntrospector
-                    .selectMethods(beanClazz, (ReflectionUtils.MethodFilter) method ->
-                            Objects.nonNull(AnnotationUtils.findAnnotation(method, WebsocketExceptionHandler.class))
-                    ).parallelStream().flatMap(method -> {
-                        final WebsocketExceptionHandler websocketExceptionHandler = AnnotationUtils.getAnnotation(method, WebsocketExceptionHandler.class);
-                        final int websocketExceptionHandlerPriority = websocketExceptionHandler.priority();
-                        return Arrays.stream(websocketExceptionHandler.value()).parallel()
-                                .map(exception -> WsExceptionHandlerMethodMetadata.builder()
-                                        // fix: swap and retain the low priority.
-                                        .priority(Math.min(websocketExceptionHandlerPriority, advicePriority))
-                                        .value(exception)
-                                        .bean(bean)
-                                        .method(method)
-                                        .build()
-                                );
-                    }).collect(Collectors.toList());
-            exceptionHandlerMethodMetadataMap.put(websocketAdvice.basePackages(), wsExceptionHandlerMethodMetadataList);
-        });
+        final WebsocketAdvice websocketAdvice = AnnotationUtils.findAnnotation(bean.getClass(), WebsocketAdvice.class);
+        if (Objects.isNull(websocketAdvice)) {
+            return bean;
+        }
+        final int advicePriority = websocketAdvice.priority();
+        final List<WsExceptionHandlerMethodMetadata> wsExceptionHandlerMethodMetadataList = MethodIntrospector.selectMethods(beanClazz,
+                (ReflectionUtils.MethodFilter) method -> Objects.nonNull(AnnotationUtils.findAnnotation(method, WebsocketExceptionHandler.class))).parallelStream()
+                .flatMap(method -> {
+                    final WebsocketExceptionHandler websocketExceptionHandler = AnnotationUtils.getAnnotation(method, WebsocketExceptionHandler.class);
+                    final int websocketExceptionHandlerPriority = websocketExceptionHandler.priority();
+                    return Arrays.stream(websocketExceptionHandler.value()).parallel()
+                            .map(exception -> WsExceptionHandlerMethodMetadata.builder()
+                                    // compare and retain the lowest priority.
+                                    .priority(Math.min(websocketExceptionHandlerPriority, advicePriority))
+                                    .value(exception)
+                                    .bean(bean)
+                                    .method(method)
+                                    .build()
+                            );
+                }).collect(Collectors.toList());
+        exceptionHandlerMethodMetadataMap.put(websocketAdvice.basePackages(), wsExceptionHandlerMethodMetadataList);
         return bean;
     }
 
@@ -67,11 +68,9 @@ public class WebsocketPlusExceptionPostProcessor implements ApplicationContextAw
     public void onApplicationEvent(ContextRefreshedEvent event) {
         websocketProcessorAttributes.getMappingHandlerMethodMetadataMap().values().parallelStream()
                 .map(WsMappingHandlerMetadata::getArchetypeHandler)
-                .forEach(websocketArchetypeHandler -> {
-                    exceptionHandlerMethodMetadataMap.entrySet().parallelStream()
-                            .filter(entry -> Arrays.stream(entry.getKey()).anyMatch(s -> websocketArchetypeHandler.getLocation().startsWith(s)))
-                            .map(Map.Entry::getValue)
-                            .forEach(websocketArchetypeHandler::addExceptionMethodMetadataList);
-                });
+                .forEach(websocketArchetypeHandler -> exceptionHandlerMethodMetadataMap.entrySet().parallelStream()
+                        .filter(entry -> Arrays.stream(entry.getKey()).anyMatch(s -> websocketArchetypeHandler.getLocation().startsWith(s)))
+                        .map(Map.Entry::getValue)
+                        .forEach(websocketArchetypeHandler::addExceptionMethodMetadataList));
     }
 }
