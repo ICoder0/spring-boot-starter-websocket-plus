@@ -18,17 +18,14 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -103,6 +100,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
             final Class<?> parameterType = parameter.getType();
             String parameterName = parameter.getName();
             String parameterDefaultValue = null;
+            boolean parameterRequired = false;
             boolean needValidated = false;
             // check parameter whether need nest-validate.
             for (Annotation annotation : parameter.getAnnotations()) {
@@ -110,6 +108,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                 if (Objects.nonNull(websocketRequestParam)) {
                     parameterName = websocketRequestParam.name();
                     parameterDefaultValue = websocketRequestParam.defaultValue();
+                    parameterRequired = websocketRequestParam.required();
                 }
                 if (AnnotatedElementUtils.hasAnnotation(parameter, Validated.class)) {
                     needValidated = true;
@@ -118,10 +117,11 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
             parameterMetadataList.add(WsMappingHandlerMethodParameterMetadata.builder()
                     .innerDecodeParamKeyName(websocketPlusProperties.getInnerDecodeParamKeyName())
                     .outerDecodeClazz(websocketPlusProperties.getOuterDecodeClazz())
-                    .parameterType(parameterType)
+                    .type(parameterType)
                     .method(method)
-                    .parameterDefaultValue(parameterDefaultValue)
-                    .parameterName(parameterName)
+                    .require(parameterRequired)
+                    .defaultValue(parameterDefaultValue)
+                    .name(parameterName)
                     .validated(needValidated)
                     .build()
             );
