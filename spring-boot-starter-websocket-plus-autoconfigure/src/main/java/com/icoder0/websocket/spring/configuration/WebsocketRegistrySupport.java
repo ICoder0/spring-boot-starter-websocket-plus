@@ -34,8 +34,7 @@ public class WebsocketRegistrySupport extends WebSocketConfigurationSupport {
                         webSocketHandlerRegistration.withSockJS();
                     }
                     Optional.ofNullable(websocketPlusProperties.getOrigins()).ifPresent(webSocketHandlerRegistration::setAllowedOrigins);
-                })
-                .collect(Collectors.toList());
+                }).collect(Collectors.toList());
         for (WebSocketConfigurer configurer : configurers) {
             configurer.registerWebSocketHandlers(registry);
         }
