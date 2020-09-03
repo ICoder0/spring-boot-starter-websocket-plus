@@ -2,8 +2,8 @@ package com.icoder0.websocket.spring.configuration;
 
 import com.icoder0.websocket.annotation.WebsocketAdvice;
 import com.icoder0.websocket.annotation.WebsocketExceptionHandler;
-import com.icoder0.websocket.spring.handler.model.WsExceptionHandlerMethodMetadata;
-import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMetadata;
+import com.icoder0.websocket.spring.model.WsExceptionHandlerMethodMetadata;
+import com.icoder0.websocket.spring.model.WsMappingHandlerMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.BeansException;
