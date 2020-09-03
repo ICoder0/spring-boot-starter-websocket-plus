@@ -15,13 +15,11 @@ import java.lang.annotation.*;
 @Component
 public @interface WebsocketMapping {
 
-    String name() default "";
-
     @AliasFor("mapping")
-    String value();
+    String[] value() default "";
 
     @AliasFor("value")
-    String mapping() default "";
+    String[] mapping() default "";
 
     boolean prototype() default false;
 }

@@ -1,4 +1,4 @@
-package com.icoder0.websocket.spring.handler.model;
+package com.icoder0.websocket.spring.model;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -6,6 +6,7 @@ import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
+import com.icoder0.websocket.core.exception.WsExceptionTemplate;
 import com.icoder0.websocket.core.exception.WsRequestParamException;
 import com.icoder0.websocket.core.utils.Assert;
 import io.netty.buffer.*;
@@ -26,8 +27,11 @@ import java.util.Optional;
 @Builder
 public class WsMappingHandlerMethodParameterMetadata {
 
-    private final Class<?> outerDecodeClazz;
-    private final String innerDecodeParamKeyName;
+    private final Class<?> payloadDecodeClazz;
+    private final String payloadParamsDecodeName;
+
+    private final String payloadSpecification;
+    private final String payloadParamSpecification;
 
     private final Method method;
     private final String name;
@@ -51,24 +55,37 @@ public class WsMappingHandlerMethodParameterMetadata {
             // primitive type
             if (ClassUtils.isPrimitiveOrWrapper(type) || org.springframework.util.TypeUtils.isAssignable(CharSequence.class, type)) {
                 final JSONObject payload = Optional.ofNullable(JSON.parseObject(textMessage.getPayload()))
-                        .orElseThrow(() -> new WsRequestParamException("检查payload规范"));
-                final JSONObject payloadParams = Optional.ofNullable(payload.getJSONObject(innerDecodeParamKeyName))
-                        .orElseThrow(() -> new WsRequestParamException("检查payload#params规范"));
+                        .orElseThrow(() -> new WsRequestParamException(String.format(
+                                WsExceptionTemplate.REQUEST_PARAMETER_PAYLOAD_SPECIFICATION_ERROR, payloadSpecification
+                        )));
+                // sequence, version, code.
+                if (payload.containsKey(name)) {
+                    return payload.getObject(name, type);
+                }
+
+                final JSONObject payloadParams = Optional.ofNullable(payload.getJSONObject(payloadParamsDecodeName))
+                        .orElseThrow(() -> new WsRequestParamException(String.format(
+                                WsExceptionTemplate.REQUEST_PARAMETER_PAYLOAD_PARAMS_SPECIFICATION_ERROR, payloadParamSpecification
+                        )));
                 // payload params require to contain parameter ?
                 Assert.checkXorCondition(!payloadParams.containsKey(name) && require,
-                        () -> new WsRequestParamException(method.getName() + "#" + name + " is required!")
+                        () -> new WsRequestParamException(String.format(
+                                WsExceptionTemplate.REQUEST_PARAMETER_NONE_MATCH, method.getName(), name)
+                        )
                 );
                 return payloadParams.getObject(name, type);
             }
             if (org.springframework.util.TypeUtils.isAssignable(Map.class, type)) {
                 return JSON.parseObject(textMessage.getPayload(), Map.class);
             }
-            if (org.springframework.util.TypeUtils.isAssignable(outerDecodeClazz, type)) {
-                return JSON.parseObject(textMessage.getPayload(), outerDecodeClazz);
+            if (org.springframework.util.TypeUtils.isAssignable(payloadDecodeClazz, type)) {
+                return JSON.parseObject(textMessage.getPayload(), payloadDecodeClazz);
             }
             final JSONObject payload = Optional.ofNullable(JSON.parseObject(textMessage.getPayload()))
-                    .orElseThrow(() -> new WsRequestParamException("检查payload规范"));
-            return payload.getObject(innerDecodeParamKeyName, type);
+                    .orElseThrow(() -> new WsRequestParamException(String.format(
+                            WsExceptionTemplate.REQUEST_PARAMETER_PAYLOAD_SPECIFICATION_ERROR, payloadSpecification
+                    )));
+            return payload.getObject(payloadParamsDecodeName, type);
         }
 
 
@@ -96,6 +113,6 @@ public class WsMappingHandlerMethodParameterMetadata {
             return webSocketMessage;
         }
 
-        throw new WsException(WsBusiCode.INTERNAL_ERROR, "抽取参数#不存在该情况");
+        throw new WsException(WsBusiCode.INTERNAL_ERROR, "IGNORE");
     }
 }

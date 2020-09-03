@@ -1,4 +1,4 @@
-package com.icoder0.websocket.spring.handler.model;
+package com.icoder0.websocket.spring.model;
 
 import com.icoder0.websocket.spring.WebsocketArchetypeHandler;
 import lombok.Builder;
@@ -14,5 +14,6 @@ import java.util.List;
 @Getter
 public class WsMappingHandlerMetadata {
     private final List<WsMappingHandlerMethodMetadata> wsMappingHandlerMethodMetadatas;
+    private final String beanName;
     private final WebsocketArchetypeHandler archetypeHandler;
 }

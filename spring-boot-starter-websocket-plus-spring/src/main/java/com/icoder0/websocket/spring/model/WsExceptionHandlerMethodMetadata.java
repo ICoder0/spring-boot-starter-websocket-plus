@@ -1,4 +1,4 @@
-package com.icoder0.websocket.spring.handler.model;
+package com.icoder0.websocket.spring.model;
 
 import lombok.Builder;
 import lombok.Getter;

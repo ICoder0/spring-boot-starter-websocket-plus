@@ -1,8 +1,11 @@
-package com.icoder0.websocket.spring.handler.model;
+package com.icoder0.websocket.spring.model;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
+import com.icoder0.websocket.core.exception.WsExceptionTemplate;
+import com.icoder0.websocket.core.exception.WsRequestParamException;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
 import com.icoder0.websocket.core.utils.Assert;
 import com.icoder0.websocket.core.utils.SpelUtils;
@@ -25,45 +28,49 @@ import java.util.stream.Collectors;
  */
 @Builder
 public class WsMappingHandlerMethodMetadata {
+
+    private static final Validator validator;
+
     /* spel-expressions */
     private final String[] value;
 
     /* websocket-plus properties */
-    private final Class<?> outerDecodeClazz;
+    private final Class<?> payloadDecodeClazz;
+    private final String payloadSpecification;
     private final String spelRootName;
 
-    private final List<WsMappingHandlerMethodParameterMetadata> parameters;
 
     @Getter
     private final Method method;
-
     @Getter
     private final Object bean;
-
-    private static final Validator validator;
-
+    private final List<WsMappingHandlerMethodParameterMetadata> parameters;
 
     public Object[] extractArgs(WebSocketSession session, WebSocketMessage<?> message) {
+        // 校验message是否匹配spel#expression
         _checkSpelValid(message);
         Object[] args = new Object[parameters.size()];
         for (int i = 0; i < parameters.size(); i++) {
             final WsMappingHandlerMethodParameterMetadata parameter = parameters.get(i);
+            // message根据parameter提取有效数据.
             final Object validateBean = parameter.extractArg(session, message);
             if (parameter.isValidated()) {
+                // 检查提取出的有效数据是否符合constraints要求.
                 Optional.ofNullable(validator.validate(validateBean)).ifPresent(this::_checkViolations);
             }
             args[i] = validateBean;
         }
+        // 检查该方法提取出的args是否符合constraints要求.
         Optional.ofNullable(validator.forExecutables().validateParameters(bean, method, args)).ifPresent(this::_checkViolations);
         return args;
     }
 
     void _checkViolations(Set<ConstraintViolation<Object>> constraintViolations) {
         final String errorJsonMessage = constraintViolations.parallelStream()
-                .map(constraintViolation -> constraintViolation.getRootBean().toString() + "#" +
-                        constraintViolation.getPropertyPath() + ":=" + constraintViolation.getInvalidValue() + " IS NOT VALID " +
-                        "#REQUIRE {" + constraintViolation.getMessage() + "}"
-                )
+                .map(constraintViolation -> String.format(
+                        WsExceptionTemplate.CONSTRAINT_VIOLATION_VALIDATE_ERROR,
+                        constraintViolation.getPropertyPath(),
+                        constraintViolation.getMessage()))
                 .limit(1)
                 .collect(Collectors.joining());
         if (!constraintViolations.isEmpty()) {
@@ -82,13 +89,14 @@ public class WsMappingHandlerMethodMetadata {
             return;
         }
         final TextMessage textMessage = TypeUtils.cast(message, TextMessage.class, ParserConfig.getGlobalInstance());
-        final Object validateBean = JSON.parseObject(textMessage.getPayload(), outerDecodeClazz);
-
+        final Object validateBean = Optional.ofNullable(JSON.parseObject(textMessage.getPayload(), payloadDecodeClazz))
+                .orElseThrow(() -> new WsRequestParamException(String.format(
+                        WsExceptionTemplate.REQUEST_PARAMETER_PAYLOAD_SPECIFICATION_ERROR, payloadSpecification
+                )));
         int index = 0;
         boolean exprMatched = false;
         do {
             exprMatched = SpelUtils.builder().context(spelRootName, validateBean).expr(value[index++]).getBooleanResult();
-            // 如果出现false, 则不符合condition.
             if (!exprMatched) {
                 break;
             }
