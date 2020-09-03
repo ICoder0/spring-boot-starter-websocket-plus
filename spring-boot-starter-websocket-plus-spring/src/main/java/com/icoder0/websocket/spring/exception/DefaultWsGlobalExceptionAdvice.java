@@ -6,8 +6,10 @@ import com.icoder0.websocket.annotation.WebsocketExceptionHandler;
 import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.model.WsOutboundBean;
+import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -21,11 +23,15 @@ import javax.validation.ValidationException;
 @WebsocketAdvice("com.icoder0")
 public class DefaultWsGlobalExceptionAdvice {
 
+    @Autowired
+    private WebsocketPlusProperties websocketPlusProperties;
+
     @WebsocketExceptionHandler(value = Throwable.class, priority = Integer.MIN_VALUE)
     public void handleRootException(WebSocketSession session, Throwable e) {
         log.error("[Throwable]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.INTERNAL_ERROR)
+                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message(e.getMessage()), session
         );
     }
@@ -35,6 +41,7 @@ public class DefaultWsGlobalExceptionAdvice {
         log.error("[WsException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(e.getWsBusiCode())
+                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message(e.getMessage()), session
         );
     }
@@ -44,6 +51,7 @@ public class DefaultWsGlobalExceptionAdvice {
         log.error("[JSONException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
+                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message("json解析失败, " + e.getMessage()), session
         );
     }
@@ -53,6 +61,7 @@ public class DefaultWsGlobalExceptionAdvice {
         log.error("[ValidationException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
+                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message("violation校验失败, " + e.getMessage()), session
         );
     }
@@ -62,6 +71,7 @@ public class DefaultWsGlobalExceptionAdvice {
         log.error("[SpelEvaluationException]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
+                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message("spel解析失败, " + e.getMessage()), session
         );
     }
