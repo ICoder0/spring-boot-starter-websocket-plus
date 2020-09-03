@@ -3,15 +3,12 @@ package com.icoder0.websocket.spring.configuration;
 import com.icoder0.websocket.annotation.WebsocketMapping;
 import com.icoder0.websocket.annotation.WebsocketMethodMapping;
 import com.icoder0.websocket.annotation.WebsocketRequestParam;
-import com.icoder0.websocket.core.exception.WsBusiCode;
-import com.icoder0.websocket.core.exception.WsException;
-import com.icoder0.websocket.core.exception.WsExpressionException;
-import com.icoder0.websocket.core.exception.WsMappingPrototypeException;
+import com.icoder0.websocket.core.exception.*;
 import com.icoder0.websocket.spring.WebsocketArchetypeHandler;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
-import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMetadata;
-import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodMetadata;
-import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodParameterMetadata;
+import com.icoder0.websocket.spring.model.WsMappingHandlerMetadata;
+import com.icoder0.websocket.spring.model.WsMappingHandlerMethodMetadata;
+import com.icoder0.websocket.spring.model.WsMappingHandlerMethodParameterMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopProxyUtils;
@@ -40,6 +37,8 @@ import java.util.stream.Collectors;
 /**
  * @author bofa1ex
  * @since 2020/8/14
+ *
+ * @see WsExceptionTemplate 异常输出模板
  */
 @Slf4j
 @Getter
@@ -66,40 +65,53 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
         if (Objects.isNull(websocketMapping)) {
             return bean;
         }
-        final String mapping = websocketMapping.mapping();
+        final String[] mappings = websocketMapping.mapping();
         final List<WsMappingHandlerMethodMetadata> mappingMethodMetadataList = MethodIntrospector.selectMethods(beanClazz,
-                (ReflectionUtils.MethodFilter) method -> AnnotatedElementUtils.hasAnnotation(method, WebsocketMethodMapping.class)).parallelStream()
+                (ReflectionUtils.MethodFilter) method -> AnnotatedElementUtils.hasAnnotation(method, WebsocketMethodMapping.class)).stream()
+                // 校验methodMapping#expression是否存在冲突
                 .peek(this::_checkMethodMappingExpressionValid)
+                // 校验方法入参名compile是否符合要求
                 .peek(method -> _checkMethodParameterValid(method.getParameters()))
                 .map(method -> WsMappingHandlerMethodMetadata.builder()
                         .value(AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).expr())
                         .parameters(_mapperMethodParameters(method))
-                        .outerDecodeClazz(websocketPlusProperties.getOuterDecodeClazz())
+                        .payloadDecodeClazz(websocketPlusProperties.getPayloadDecodeClazz())
+                        .payloadSpecification(websocketPlusProperties.getPayloadSpecification())
                         .spelRootName(websocketPlusProperties.getSpelRootName())
                         .method(method)
                         .bean(bean)
                         .build())
                 .collect(Collectors.toList());
         // 如果路由已经存在, 判断是否支持prototype.
-        if (mappingHandlerMethodMetadataMap.containsKey(mapping) && !websocketMapping.prototype()) {
-            throw new WsMappingPrototypeException(String.format("已注册ws路由 %s", mapping));
-        }
-        mappingHandlerMethodMetadataMap.compute(mapping, (k, metadata) -> {
-            if (Objects.isNull(metadata)) {
-                /* @Aspect代理类, 会在createBean实例后自动织入cglib/jdk代理. */
-                final WebsocketArchetypeHandler archetypeHandler = beanFactory.createBean(WebsocketArchetypeHandler.class);
-                archetypeHandler.setMappingMethodMetadataList(mappingMethodMetadataList);
-                archetypeHandler.setLocation(bean.getClass().getPackage().getName());
-                return WsMappingHandlerMetadata.builder()
-                        .archetypeHandler(archetypeHandler)
-                        .wsMappingHandlerMethodMetadatas(mappingMethodMetadataList)
-                        .build();
+        for (String mapping : mappings) {
+            if (mappingHandlerMethodMetadataMap.containsKey(mapping) && !websocketMapping.prototype()) {
+                final WsMappingHandlerMetadata wsMappingHandlerMetadata = mappingHandlerMethodMetadataMap.get(mapping);
+                final String existBeanName = wsMappingHandlerMetadata.getBeanName();
+                throw new WsException(WsBusiCode.INTERNAL_ERROR, String.format(
+                        WsExceptionTemplate.MAPPING_ALREADY_REGISTER, existBeanName, mapping, beanClazz.getSimpleName())
+                );
             }
-            metadata.getWsMappingHandlerMethodMetadatas().addAll(mappingMethodMetadataList);
-            // override old method metadata
-            metadata.getArchetypeHandler().setMappingMethodMetadataList(metadata.getWsMappingHandlerMethodMetadatas());
-            return metadata;
-        });
+            mappingHandlerMethodMetadataMap.compute(mapping, (k, metadata) -> {
+                if (Objects.isNull(metadata)) {
+                    /*
+                     * createBean自动织入cglib代理.
+                     * @see com.icoder0.websocket.spring.aop.WebsocketMessageArchetypeAspect
+                     */
+                    final WebsocketArchetypeHandler archetypeHandler = beanFactory.createBean(WebsocketArchetypeHandler.class);
+                    archetypeHandler.setMappingMethodMetadataList(mappingMethodMetadataList);
+                    archetypeHandler.setLocation(bean.getClass().getPackage().getName());
+                    return WsMappingHandlerMetadata.builder()
+                            .beanName(beanClazz.getSimpleName())
+                            .archetypeHandler(archetypeHandler)
+                            .wsMappingHandlerMethodMetadatas(mappingMethodMetadataList)
+                            .build();
+                }
+                metadata.getWsMappingHandlerMethodMetadatas().addAll(mappingMethodMetadataList);
+                // override old method metadata
+                metadata.getArchetypeHandler().setMappingMethodMetadataList(metadata.getWsMappingHandlerMethodMetadatas());
+                return metadata;
+            });
+        }
         return bean;
     }
 
@@ -112,7 +124,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
 
     void _checkMethodParameterValid(Parameter... parameters) {
         if (!parameters[0].isNamePresent()) {
-            throw new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, "获取不到方法参数的真实参数名, 需要指定compiler参数 -parameters");
+            throw new WsException(WsBusiCode.INTERNAL_ERROR, WsExceptionTemplate.METHOD_PARAMETER_NAME_PRESENT);
         }
     }
 
@@ -123,7 +135,9 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                 .collect(Collectors.joining("&"));
         if (methodExpressions.containsKey(key)) {
             final Method existMethod = methodExpressions.get(key);
-            throw new WsExpressionException(String.format("[%s] @WebsocketMethodMapping#expression %s冲突, 已存在方法[%s]", method, Arrays.toString(expressions), existMethod));
+            throw new WsException(WsBusiCode.INTERNAL_ERROR, String.format(
+                    WsExceptionTemplate.METHOD_MAPPING_EXPRESSION_CONFLICT, existMethod, Arrays.toString(expressions), method)
+            );
         }
         methodExpressions.put(key, method);
     }
@@ -138,6 +152,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
             boolean needValidated = false;
             // check parameter whether need nest-validate.
             for (Annotation annotation : parameter.getAnnotations()) {
+                // 抽取WebsocketRequestParam参数
                 final WebsocketRequestParam websocketRequestParam = AnnotationUtils.getAnnotation(annotation, WebsocketRequestParam.class);
                 if (Objects.nonNull(websocketRequestParam)) {
                     parameterName = websocketRequestParam.name();
@@ -149,8 +164,10 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                 }
             }
             parameterMetadataList.add(WsMappingHandlerMethodParameterMetadata.builder()
-                    .innerDecodeParamKeyName(websocketPlusProperties.getInnerDecodeParamKeyName())
-                    .outerDecodeClazz(websocketPlusProperties.getOuterDecodeClazz())
+                    .payloadParamsDecodeName(websocketPlusProperties.getPayloadParamDecodeName())
+                    .payloadDecodeClazz(websocketPlusProperties.getPayloadDecodeClazz())
+                    .payloadSpecification(websocketPlusProperties.getPayloadSpecification())
+                    .payloadParamSpecification(websocketPlusProperties.getPayloadParamSpecification())
                     .type(parameterType)
                     .method(method)
                     .require(parameterRequired)
