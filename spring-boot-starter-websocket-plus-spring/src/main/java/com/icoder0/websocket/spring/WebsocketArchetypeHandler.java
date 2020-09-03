@@ -2,9 +2,9 @@ package com.icoder0.websocket.spring;
 
 import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
+import com.icoder0.websocket.core.exception.WsExceptionTemplate;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
-import com.icoder0.websocket.spring.handler.model.WsExceptionHandlerMethodMetadata;
-import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMethodMetadata;
+import com.icoder0.websocket.spring.model.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ReflectionUtils;
@@ -64,7 +64,9 @@ public class WebsocketArchetypeHandler implements WebSocketHandler {
                 return;
             }
         }
-        handleException(session, new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format("[%s] 未匹配到WebsocketMethodMapping", message.getPayload())));
+        handleException(session, new WsException(WsBusiCode.ILLEGAL_REQUEST_ERROR, String.format(
+                WsExceptionTemplate.METHOD_MAPPING_NONE_MATCH, message.getPayload()))
+        );
     }
 
     public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
