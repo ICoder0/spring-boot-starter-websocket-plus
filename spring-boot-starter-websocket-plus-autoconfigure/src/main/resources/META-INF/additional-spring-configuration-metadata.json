@@ -59,6 +59,18 @@
       "type": "java.lang.String",
       "defaultValue": "inbound",
       "description": "WebsocketMethodMapping属性value中的context变量名"
+    },
+    {
+      "name": "websocket-plus.payloadSpecification",
+      "type": "java.lang.String",
+      "defaultValue": "{seq:0, code:1000, version:0, params:{}}",
+      "description": "Websocket#TextMessage上行数据格式规范"
+    },
+    {
+      "name": "websocket-plus.payloadParamSpecification",
+      "type": "java.lang.String",
+      "defaultValue": "{..., params:{}}",
+      "description": "Websocket#TextMessage上行数据params字段格式规范"
     }
   ]
 }

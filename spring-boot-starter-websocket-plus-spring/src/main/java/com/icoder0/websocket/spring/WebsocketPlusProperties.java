@@ -24,14 +24,22 @@ public class WebsocketPlusProperties {
 
     private Integer maxBinaryMessageBufferSize = 10240;
 
-    /** websocket handler registration properties */
+    /**
+     * websocket handler registration properties
+     */
     private boolean withSockJS = false;
     private String[] origins = new String[]{"*"};
 
-    /** decode properties */
-    private Class<?> outerDecodeClazz = WsInboundBean.class;
-    private String innerDecodeParamKeyName = "params";
-
-    /** spel properties */
+    /**
+     * decode properties
+     */
+    private Class<?> payloadDecodeClazz = WsInboundBean.class;
+    private String payloadSpecification = "{seq:0, code:1000, version:0, params:{}}";
+    private String payloadParamSpecification = "{..., params:{}}";
+    private String payloadParamDecodeName = "params";
+    private String payloadSequenceDecodeName = "sequence";
+    /**
+     * spel properties
+     */
     private String spelRootName = "inbound";
 }
