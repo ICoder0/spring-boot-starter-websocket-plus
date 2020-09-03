@@ -1,6 +1,6 @@
 package com.icoder0.websocket.spring.configuration;
 
-import com.icoder0.websocket.spring.handler.model.WsMappingHandlerMetadata;
+import com.icoder0.websocket.spring.model.WsMappingHandlerMetadata;
 import lombok.Data;
 
 import java.util.HashMap;
