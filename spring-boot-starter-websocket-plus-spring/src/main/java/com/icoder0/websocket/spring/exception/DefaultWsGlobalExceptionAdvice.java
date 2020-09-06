@@ -3,8 +3,9 @@ package com.icoder0.websocket.spring.exception;
 import com.alibaba.fastjson.JSONException;
 import com.icoder0.websocket.annotation.WebsocketAdvice;
 import com.icoder0.websocket.annotation.WebsocketExceptionHandler;
-import com.icoder0.websocket.core.exception.WsBusiCode;
 import com.icoder0.websocket.core.exception.WsException;
+import com.icoder0.websocket.core.exception.WsSpecificationException;
+import com.icoder0.websocket.core.model.WsBusiCode;
 import com.icoder0.websocket.core.model.WsOutboundBean;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
@@ -23,55 +24,56 @@ import javax.validation.ValidationException;
 @WebsocketAdvice("com.icoder0")
 public class DefaultWsGlobalExceptionAdvice {
 
-    @Autowired
-    private WebsocketPlusProperties websocketPlusProperties;
-
     @WebsocketExceptionHandler(value = Throwable.class, priority = Integer.MIN_VALUE)
     public void handleRootException(WebSocketSession session, Throwable e) {
         log.error("[Throwable]异常: ", e);
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.INTERNAL_ERROR)
-                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message(e.getMessage()), session
         );
     }
 
-    @WebsocketExceptionHandler(WsException.class)
+    @WebsocketExceptionHandler(value = WsException.class, priority = Integer.MIN_VALUE + 1)
     public void handleWsException(WebSocketSession session, WsException e) {
-        log.error("[WsException]异常: ", e);
+        log.error("[WsException]异常: {}", e.getMessage());
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(e.getWsBusiCode())
-                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
+                .message(e.getMessage()), session
+        );
+    }
+
+    @WebsocketExceptionHandler(WsSpecificationException.class)
+    public void handleWsSpecificationException(WebSocketSession session, WsSpecificationException e) {
+        log.error("[WsSpecificationException]异常: {}", e.getMessage());
+        WebsocketMessageEmitter.emit(WsOutboundBean
+                .status(e.getWsBusiCode())
                 .message(e.getMessage()), session
         );
     }
 
     @WebsocketExceptionHandler(JSONException.class)
     public void handleJsonException(WebSocketSession session, JSONException e) {
-        log.error("[JSONException]异常: ", e);
+        log.error("[JSONException]异常: {}", e.getMessage());
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
-                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message("json解析失败, " + e.getMessage()), session
         );
     }
 
     @WebsocketExceptionHandler(ValidationException.class)
     public void handleValidationException(WebSocketSession session, ValidationException e) {
-        log.error("[ValidationException]异常: ", e);
+        log.error("[ValidationException]异常: {}", e.getMessage());
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
-                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message("violation校验失败, " + e.getMessage()), session
         );
     }
 
     @WebsocketExceptionHandler(SpelEvaluationException.class)
     public void handleSpelEvaluationException(WebSocketSession session, SpelEvaluationException e) {
-        log.error("[SpelEvaluationException]异常: ", e);
+        log.error("[SpelEvaluationException]异常: {}", e.getMessage());
         WebsocketMessageEmitter.emit(WsOutboundBean
                 .status(WsBusiCode.ILLEGAL_REQUEST_ERROR)
-                .sequence((Long) session.getAttributes().getOrDefault(websocketPlusProperties.getPayloadSequenceDecodeName(), 0L))
                 .message("spel解析失败, " + e.getMessage()), session
         );
     }
