@@ -1,11 +1,9 @@
 package com.icoder0.websocket.spring.model;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsExceptionTemplate;
-import com.icoder0.websocket.core.exception.WsRequestParamException;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
 import com.icoder0.websocket.core.utils.Assert;
 import com.icoder0.websocket.core.utils.SpelUtils;
@@ -19,7 +17,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -32,13 +29,11 @@ public class WsMappingHandlerMethodMetadata {
     private static final Validator validator;
 
     /* spel-expressions */
-    private final String[] value;
+    private final String[] expressions;
 
     /* websocket-plus properties */
-    private final Class<?> payloadDecodeClazz;
-    private final String payloadSpecification;
-    private final String spelRootName;
-
+    private final Class<?> inboundBeanClazz;
+    private final String spelVariableName;
 
     @Getter
     private final Method method;
@@ -89,19 +84,16 @@ public class WsMappingHandlerMethodMetadata {
             return;
         }
         final TextMessage textMessage = TypeUtils.cast(message, TextMessage.class, ParserConfig.getGlobalInstance());
-        final Object validateBean = Optional.ofNullable(JSON.parseObject(textMessage.getPayload(), payloadDecodeClazz))
-                .orElseThrow(() -> new WsRequestParamException(String.format(
-                        WsExceptionTemplate.REQUEST_PARAMETER_PAYLOAD_SPECIFICATION_ERROR, payloadSpecification
-                )));
+        final Object validateBean = JSON.parseObject(textMessage.getPayload(), inboundBeanClazz);
         int index = 0;
         boolean exprMatched = false;
         do {
-            exprMatched = SpelUtils.builder().context(spelRootName, validateBean).expr(value[index++]).getBooleanResult();
+            exprMatched = SpelUtils.builder().context(spelVariableName, validateBean).expr(expressions[index++]).getBooleanResult();
             if (!exprMatched) {
                 break;
             }
-        } while (index < value.length);
-        Assert.checkCondition(exprMatched, (Supplier<WsSpelValidationException>) WsSpelValidationException::new);
+        } while (index < expressions.length);
+        Assert.checkCondition(exprMatched, WsSpelValidationException::new);
     }
 
     static {
