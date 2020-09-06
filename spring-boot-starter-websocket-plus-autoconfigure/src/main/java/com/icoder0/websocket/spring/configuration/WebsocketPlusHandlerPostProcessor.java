@@ -1,9 +1,12 @@
 package com.icoder0.websocket.spring.configuration;
 
+import com.icoder0.websocket.annotation.WebsocketHeader;
 import com.icoder0.websocket.annotation.WebsocketMapping;
 import com.icoder0.websocket.annotation.WebsocketMethodMapping;
-import com.icoder0.websocket.annotation.WebsocketRequestParam;
-import com.icoder0.websocket.core.exception.*;
+import com.icoder0.websocket.annotation.WebsocketPayload;
+import com.icoder0.websocket.core.exception.WsException;
+import com.icoder0.websocket.core.exception.WsExceptionTemplate;
+import com.icoder0.websocket.core.model.WsBusiCode;
 import com.icoder0.websocket.spring.WebsocketArchetypeHandler;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import com.icoder0.websocket.spring.model.WsMappingHandlerMetadata;
@@ -18,6 +21,8 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -36,13 +41,12 @@ import java.util.stream.Collectors;
 
 /**
  * @author bofa1ex
- * @since 2020/8/14
- *
  * @see WsExceptionTemplate 异常输出模板
+ * @since 2020/8/14
  */
 @Slf4j
 @Getter
-public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAware, BeanPostProcessor {
+public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAware, BeanPostProcessor, ApplicationListener<ContextRefreshedEvent> {
 
     @Autowired(required = false)
     private List<HandshakeInterceptor> handshakeInterceptors;
@@ -73,11 +77,10 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                 // 校验方法入参名compile是否符合要求
                 .peek(method -> _checkMethodParameterValid(method.getParameters()))
                 .map(method -> WsMappingHandlerMethodMetadata.builder()
-                        .value(AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).expr())
+                        .expressions(AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).expr())
+                        .inboundBeanClazz(WebsocketPlusProperties.inboundBeanClazz)
+                        .spelVariableName(WebsocketPlusProperties.spelVariableName)
                         .parameters(_mapperMethodParameters(method))
-                        .payloadDecodeClazz(websocketPlusProperties.getPayloadDecodeClazz())
-                        .payloadSpecification(websocketPlusProperties.getPayloadSpecification())
-                        .spelRootName(websocketPlusProperties.getSpelRootName())
                         .method(method)
                         .bean(bean)
                         .build())
@@ -99,6 +102,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                      */
                     final WebsocketArchetypeHandler archetypeHandler = beanFactory.createBean(WebsocketArchetypeHandler.class);
                     archetypeHandler.setMappingMethodMetadataList(mappingMethodMetadataList);
+                    archetypeHandler.setWebsocketPlusProperties(websocketPlusProperties);
                     archetypeHandler.setLocation(bean.getClass().getPackage().getName());
                     return WsMappingHandlerMetadata.builder()
                             .beanName(beanClazz.getSimpleName())
@@ -129,10 +133,8 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
     }
 
     void _checkMethodMappingExpressionValid(Method method) {
-        final String[] expressions = AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).value();
-        final String key = Arrays.stream(expressions)
-                .map(expression -> DigestUtils.md5DigestAsHex(expression.getBytes()))
-                .collect(Collectors.joining("&"));
+        final String[] expressions = AnnotationUtils.getAnnotation(method, WebsocketMethodMapping.class).expr();
+        final String key = Arrays.stream(expressions).map(expression -> DigestUtils.md5DigestAsHex(expression.getBytes())).collect(Collectors.joining("&"));
         if (methodExpressions.containsKey(key)) {
             final Method existMethod = methodExpressions.get(key);
             throw new WsException(WsBusiCode.INTERNAL_ERROR, String.format(
@@ -143,33 +145,48 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
     }
 
     List<WsMappingHandlerMethodParameterMetadata> _mapperMethodParameters(Method method) {
-        List<WsMappingHandlerMethodParameterMetadata> parameterMetadataList = new LinkedList<>();
+        final List<WsMappingHandlerMethodParameterMetadata> parameterMetadataList = new LinkedList<>();
         for (final Parameter parameter : method.getParameters()) {
             final Class<?> parameterType = parameter.getType();
             String parameterName = parameter.getName();
             String parameterDefaultValue = null;
             boolean parameterRequired = false;
             boolean needValidated = false;
-            // check parameter whether need nest-validate.
+            boolean isHeader = false;
+            boolean isNormal = true;
+            /*
+             * 1. check parameter whether need nest-validate.
+             * 2. process parameter which modify by WebsocketPayload.
+             * 3. process parameter which modify by WebsocketHeader.
+             */
             for (Annotation annotation : parameter.getAnnotations()) {
-                // 抽取WebsocketRequestParam参数
-                final WebsocketRequestParam websocketRequestParam = AnnotationUtils.getAnnotation(annotation, WebsocketRequestParam.class);
-                if (Objects.nonNull(websocketRequestParam)) {
-                    parameterName = websocketRequestParam.name();
-                    parameterDefaultValue = websocketRequestParam.defaultValue();
-                    parameterRequired = websocketRequestParam.required();
-                }
+                final WebsocketPayload websocketPayload = AnnotationUtils.getAnnotation(annotation, WebsocketPayload.class);
+                final WebsocketHeader websocketHeader = AnnotationUtils.getAnnotation(annotation, WebsocketHeader.class);
+
                 if (AnnotatedElementUtils.hasAnnotation(parameter, Validated.class)) {
                     needValidated = true;
                 }
+                if (Objects.nonNull(websocketPayload)) {
+                    isNormal = false;
+                    parameterName = websocketPayload.name();
+                    parameterDefaultValue = websocketPayload.defaultValue();
+                    parameterRequired = websocketPayload.required();
+                }
+                if (Objects.nonNull(websocketHeader)) {
+                    isNormal = false;
+                    isHeader = true;
+                    parameterName = websocketHeader.isSequence() ? WebsocketPlusProperties.payloadSequenceDecodeName : null;
+                    parameterName = Objects.isNull(parameterName) ?
+                            websocketHeader.isFunctionCode() ? WebsocketPlusProperties.payloadFunctionCodeDecodeName : null : parameterName;
+                }
             }
             parameterMetadataList.add(WsMappingHandlerMethodParameterMetadata.builder()
-                    .payloadParamsDecodeName(websocketPlusProperties.getPayloadParamDecodeName())
-                    .payloadDecodeClazz(websocketPlusProperties.getPayloadDecodeClazz())
-                    .payloadSpecification(websocketPlusProperties.getPayloadSpecification())
-                    .payloadParamSpecification(websocketPlusProperties.getPayloadParamSpecification())
+                    .inboundBeanClazz(WebsocketPlusProperties.inboundBeanClazz)
+                    .payloadParamsDecodeName(WebsocketPlusProperties.payloadParamsDecodeName)
                     .type(parameterType)
                     .method(method)
+                    .isHeader(isHeader)
+                    .isNormal(isNormal)
                     .require(parameterRequired)
                     .defaultValue(parameterDefaultValue)
                     .name(parameterName)
@@ -180,4 +197,8 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
         return parameterMetadataList;
     }
 
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        methodExpressions.clear();
+    }
 }
