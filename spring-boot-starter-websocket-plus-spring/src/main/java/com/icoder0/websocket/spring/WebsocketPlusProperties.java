@@ -4,9 +4,7 @@ import com.icoder0.websocket.core.model.WsInboundBean;
 import com.icoder0.websocket.core.model.WsInboundBeanSpecification;
 import com.icoder0.websocket.core.model.WsOutboundBean;
 import com.icoder0.websocket.core.model.WsOutboundBeanSpecification;
-import lombok.Data;
 import lombok.Setter;
-import lombok.experimental.UtilityClass;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.concurrent.TimeUnit;

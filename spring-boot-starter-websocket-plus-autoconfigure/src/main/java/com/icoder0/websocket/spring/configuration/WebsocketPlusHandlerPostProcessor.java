@@ -52,9 +52,6 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
     private List<HandshakeInterceptor> handshakeInterceptors;
 
     @Autowired
-    private WebsocketPlusProperties websocketPlusProperties;
-
-    @Autowired
     private WebsocketProcessorAttributes websocketProcessorAttributes;
 
     private ConfigurableListableBeanFactory beanFactory;
@@ -102,7 +99,6 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                      */
                     final WebsocketArchetypeHandler archetypeHandler = beanFactory.createBean(WebsocketArchetypeHandler.class);
                     archetypeHandler.setMappingMethodMetadataList(mappingMethodMetadataList);
-                    archetypeHandler.setWebsocketPlusProperties(websocketPlusProperties);
                     archetypeHandler.setLocation(bean.getClass().getPackage().getName());
                     return WsMappingHandlerMetadata.builder()
                             .beanName(beanClazz.getSimpleName())

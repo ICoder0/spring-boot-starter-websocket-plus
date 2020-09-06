@@ -17,7 +17,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -26,9 +25,6 @@ import java.util.Objects;
  */
 @Slf4j
 public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAspectHandler {
-
-    @Resource
-    protected WebsocketPlusProperties websocketPlusProperties;
 
     @Override
     public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {

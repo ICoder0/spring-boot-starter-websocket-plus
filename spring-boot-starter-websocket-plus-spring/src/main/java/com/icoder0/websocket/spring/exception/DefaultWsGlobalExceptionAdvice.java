@@ -7,10 +7,8 @@ import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.exception.WsSpecificationException;
 import com.icoder0.websocket.core.model.WsBusiCode;
 import com.icoder0.websocket.core.model.WsOutboundBean;
-import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import com.icoder0.websocket.spring.utils.WebsocketMessageEmitter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.web.socket.WebSocketSession;
 

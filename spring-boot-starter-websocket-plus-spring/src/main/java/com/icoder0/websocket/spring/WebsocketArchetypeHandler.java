@@ -33,8 +33,6 @@ public class WebsocketArchetypeHandler implements WebSocketHandler {
 
     private List<WsExceptionHandlerMethodMetadata> exceptionMethodMetadataList;
 
-    private WebsocketPlusProperties websocketPlusProperties;
-
     private String location;
 
     public final void handleException(WebSocketSession session, Throwable t) {
