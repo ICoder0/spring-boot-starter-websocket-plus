@@ -1,7 +1,9 @@
 package com.icoder0.websocket.spring.aop;
 
 
+import com.icoder0.websocket.core.model.WsOutboundBeanSpecification;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +22,19 @@ public class WebsocketMessageArchetypeAspect {
     @Autowired
     private WebsocketMessageAspectHandler websocketMessageAspectHandler;
 
+    @Autowired
+    private WebsocketMessageCustomizerRegistry websocketMessageCustomizerRegistry;
+
     @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.handleInboundMessage(..))" +
             "&& args(session, message)", argNames = "session, message")
     public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
         websocketMessageAspectHandler.handleInboundMessage(session, message);
+        websocketMessageCustomizerRegistry.handleWebsocketMessageCustomizer(session, message);
     }
 
     @Before(value = "execution(* com.icoder0.websocket.spring.WebsocketArchetypeHandler.handleOutboundMessage(..))" +
             "&& args(session, outboundBean)", argNames = "session, outboundBean")
-    public void handleOutboundMessage(WebSocketSession session, Object outboundBean) {
+    public void handleOutboundMessage(WebSocketSession session, WsOutboundBeanSpecification outboundBean) {
         websocketMessageAspectHandler.handleOutboundMessage(session, outboundBean);
     }
 
