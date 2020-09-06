@@ -1,4 +1,4 @@
-package com.icoder0.websocket.core.exception;
+package com.icoder0.websocket.core.model;
 
 import lombok.Getter;
 
