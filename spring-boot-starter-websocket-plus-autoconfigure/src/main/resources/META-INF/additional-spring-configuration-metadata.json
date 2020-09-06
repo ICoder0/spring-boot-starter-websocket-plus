@@ -43,34 +43,52 @@
       "description": "跨域origins集合"
     },
     {
-      "name": "websocket-plus.outerDecodeClazz",
+      "name": "websocket-plus.inboundBeanClazz",
       "type": "java.lang.Class",
       "defaultValue": "com.icoder0.websocket.core.model.WsInboundBean",
-      "description": "textMessage最外层类的类型"
+      "description": "上行数据格式解析类"
     },
     {
-      "name": "websocket-plus.innerDecodeParamKeyName",
-      "type": "java.lang.String",
-      "defaultValue": "params",
-      "description": "最大二进制内容缓冲区大小限制"
+      "name": "websocket-plus.outboundBeanClazz",
+      "type": "java.lang.Class",
+      "defaultValue": "com.icoder0.websocket.core.model.WsOutboundBean",
+      "description": "下行数据格式解析类"
     },
     {
-      "name": "websocket-plus.spelRootName",
-      "type": "java.lang.String",
-      "defaultValue": "inbound",
-      "description": "WebsocketMethodMapping属性value中的context变量名"
-    },
-    {
-      "name": "websocket-plus.payloadSpecification",
+      "name": "websocket-plus.inboundSpecification",
       "type": "java.lang.String",
       "defaultValue": "{seq:0, code:1000, version:0, params:{}}",
-      "description": "Websocket#TextMessage上行数据格式规范"
+      "description": "上行数据格式规范"
     },
     {
-      "name": "websocket-plus.payloadParamSpecification",
+      "name": "websocket-plus.outboundSpecification",
       "type": "java.lang.String",
-      "defaultValue": "{..., params:{}}",
-      "description": "Websocket#TextMessage上行数据params字段格式规范"
+      "defaultValue": "{seq:0, code:200, message:{\"action success\"}, content:{}}",
+      "description": "下行数据格式规范"
+    },
+    {
+      "name": "websocket-plus.payloadParamsDecodeName",
+      "type": "java.lang.String",
+      "defaultValue": "sequence",
+      "description": "上行数据格式#业务参数对应的变量名"
+    },
+    {
+      "name": "websocket-plus.payloadSequenceDecodeName",
+      "type": "java.lang.String",
+      "defaultValue": "params",
+      "description": "上行数据格式#消息序号对应的变量名"
+    },
+    {
+      "name": "websocket-plus.payloadFunctionCodeDecodeName",
+      "type": "java.lang.String",
+      "defaultValue": "code",
+      "description": "上行数据格式#函数枚举对应的变量名"
+    },
+    {
+      "name": "websocket-plus.spelVariableName",
+      "type": "java.lang.String",
+      "defaultValue": "inbound",
+      "description": "spel#expression绑定的变量名"
     }
   ]
 }
