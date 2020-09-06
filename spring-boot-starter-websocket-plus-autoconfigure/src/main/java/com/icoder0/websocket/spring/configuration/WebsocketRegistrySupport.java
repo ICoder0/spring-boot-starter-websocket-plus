@@ -30,14 +30,15 @@ public class WebsocketRegistrySupport extends WebSocketConfigurationSupport {
         final List<WebSocketConfigurer> configurers = websocketProcessorAttributes.getMappingHandlerMethodMetadataMap().entrySet().parallelStream()
                 .map(entry -> (WebSocketConfigurer) _registry -> {
                     final WebSocketHandlerRegistration webSocketHandlerRegistration = _registry.addHandler(entry.getValue().getArchetypeHandler(), entry.getKey());
-                    if (websocketPlusProperties.isWithSockJS()) {
+                    if (WebsocketPlusProperties.withSockJS) {
                         webSocketHandlerRegistration.withSockJS();
                     }
-                    Optional.ofNullable(websocketPlusProperties.getOrigins()).ifPresent(webSocketHandlerRegistration::setAllowedOrigins);
+                    Optional.ofNullable(WebsocketPlusProperties.origins).ifPresent(webSocketHandlerRegistration::setAllowedOrigins);
                 }).collect(Collectors.toList());
         for (WebSocketConfigurer configurer : configurers) {
             configurer.registerWebSocketHandlers(registry);
         }
     }
+
 
 }
