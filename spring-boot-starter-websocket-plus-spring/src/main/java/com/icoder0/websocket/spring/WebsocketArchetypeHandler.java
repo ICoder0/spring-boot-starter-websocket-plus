@@ -1,9 +1,12 @@
 package com.icoder0.websocket.spring;
 
-import com.icoder0.websocket.core.exception.WsBusiCode;
+import com.alibaba.fastjson.parser.ParserConfig;
+import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.exception.WsExceptionTemplate;
 import com.icoder0.websocket.core.exception.WsSpelValidationException;
+import com.icoder0.websocket.core.model.WsBusiCode;
+import com.icoder0.websocket.core.model.WsOutboundBeanSpecification;
 import com.icoder0.websocket.spring.model.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,8 @@ public class WebsocketArchetypeHandler implements WebSocketHandler {
 
     private List<WsExceptionHandlerMethodMetadata> exceptionMethodMetadataList;
 
+    private WebsocketPlusProperties websocketPlusProperties;
+
     private String location;
 
     public final void handleException(WebSocketSession session, Throwable t) {
@@ -49,13 +54,24 @@ public class WebsocketArchetypeHandler implements WebSocketHandler {
 
     @Override
     public final void handleMessage(WebSocketSession session, WebSocketMessage<?> message) {
-        handleInboundMessage(session, message);
+        try {
+            /*
+             * 1. 上行数据日志打印.
+             * 2. sequence, params, functionCode规范校验.
+             * 3. sequence缓存到原生attributes.
+             */
+            handleInboundMessage(session, message);
+        } catch (Exception e) {
+            /* 如果规范校验未通过, 直接return. */
+            handleException(session, e);
+            return;
+        }
         for (WsMappingHandlerMethodMetadata wsMappingHandlerMethodMetadata : this.getMappingMethodMetadataList()) {
             final Method method = wsMappingHandlerMethodMetadata.getMethod();
             final Object target = wsMappingHandlerMethodMetadata.getBean();
             try {
                 final Object[] args = wsMappingHandlerMethodMetadata.extractArgs(session, message);
-                final Object outboundBean = ReflectionUtils.invokeMethod(method, target, args);
+                final WsOutboundBeanSpecification outboundBean = TypeUtils.castToJavaBean(ReflectionUtils.invokeMethod(method, target, args), WsOutboundBeanSpecification.class);
                 handleOutboundMessage(session, outboundBean);
                 return;
             } catch (WsSpelValidationException ignored) {
@@ -70,10 +86,9 @@ public class WebsocketArchetypeHandler implements WebSocketHandler {
     }
 
     public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
-
     }
 
-    public void handleOutboundMessage(WebSocketSession session, Object outboundBean) {
+    public void handleOutboundMessage(WebSocketSession session, WsOutboundBeanSpecification outboundBean) {
 
     }
 
