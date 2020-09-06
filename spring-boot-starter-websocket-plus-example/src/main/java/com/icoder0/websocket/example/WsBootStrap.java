@@ -25,19 +25,19 @@ import javax.validation.constraints.Size;
 public class WsBootStrap {
 
     @WebsocketMethodMapping("#inbound.code == 1001")
-    public WsOutboundBean<?> login(WebSocketSession webSocketSession, Long seq, @Validated WsLoginVO req) {
+    public WsOutboundBean<?> login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
         log.info("login {}", req);
         webSocketSession.getAttributes().put("account", req.getAccount());
-        return WsOutboundBean.ok().sequence(seq)
+        return WsOutboundBean.ok()
                 .body(ImmutableMap.of(
                         "hello", "world"
                 ));
     }
 
     @WebsocketMethodMapping("#inbound.code == 1003")
-    public void logout(WebSocketSession webSocketSession, Long seq, @NotBlank @Size(min = 4, max = 6) String account) {
+    public void logout(WebSocketSession webSocketSession, @NotBlank @Size(min = 4, max = 6) String account) {
         log.info("{} logout", account);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().sequence(seq).body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
                 "account", account
         )), webSocketSession);
     }
@@ -46,7 +46,7 @@ public class WsBootStrap {
     public void testBinaryMessage(WebSocketSession webSocketSession, BinaryMessage binaryMessage) {
         final String hex = ByteUtils.bytes2Hex(binaryMessage.getPayload().array());
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().sequence(0L).body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
                 "testBinaryMessage", binaryMessage.getPayload()
         )), webSocketSession);
     }
@@ -58,7 +58,7 @@ public class WsBootStrap {
     public void testBinaryMessage(WebSocketSession webSocketSession, byte[] bytes) {
         final String hex = ByteUtils.bytes2Hex(bytes);
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().sequence(0L).body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
                 "testBinaryMessage", bytes
         )), webSocketSession);
     }
@@ -67,9 +67,9 @@ public class WsBootStrap {
             "#inbound.code == 1006",
             "#inbound.version > 3"
     })
-    public WsOutboundBean<?> testNestMessage(Long seq, ParentVO req) {
+    public WsOutboundBean<?> testNestMessage(ParentVO req) {
         log.info("{} testNestMessage", req);
-        return WsOutboundBean.ok().sequence(0L).body(ImmutableMap.of(
+        return WsOutboundBean.ok().body(ImmutableMap.of(
                 "testNestMessage", req
         ));
     }

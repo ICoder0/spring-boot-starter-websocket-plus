@@ -19,9 +19,9 @@ import javax.validation.constraints.NotNull;
 public class WsBootStrapDup {
 
     @WebsocketMethodMapping("#inbound.code == 1006")
-    public WsOutboundBean<?> subTest(@NotNull Long seq, @NotNull Long account) {
-        log.info("subTest account#{} seq#{}", account, seq);
-        return WsOutboundBean.ok().sequence(seq).body(ImmutableMap.of(
+    public WsOutboundBean<?> subTest(@NotNull Long account) {
+        log.info("subTest account#{}", account);
+        return WsOutboundBean.ok().body(ImmutableMap.of(
                 "hello", "world"
         ));
     }
