@@ -2,10 +2,9 @@ package com.icoder0.websocket.spring.model;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsException;
-import com.icoder0.websocket.core.model.WsBusiCode;
+import com.icoder0.websocket.core.constant.WsBusiCode;
 import io.netty.buffer.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,7 +51,7 @@ public class WsMappingHandlerMethodParameterMetadata {
             if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, type)) {
                 return webSocketMessage;
             }
-            final TextMessage textMessage = TypeUtils.cast(webSocketMessage, TextMessage.class, ParserConfig.getGlobalInstance());
+            final TextMessage textMessage = TypeUtils.castToJavaBean(webSocketMessage, TextMessage.class);
             final JSONObject payload = JSON.parseObject(textMessage.getPayload());
             final JSONObject payloadParams = payload.getJSONObject(payloadParamsDecodeName);
             return isNormal ?
@@ -65,7 +64,7 @@ public class WsMappingHandlerMethodParameterMetadata {
         }
 
         if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, webSocketMessage.getClass())) {
-            final BinaryMessage binaryMessage = TypeUtils.cast(webSocketMessage, BinaryMessage.class, ParserConfig.getGlobalInstance());
+            final BinaryMessage binaryMessage = TypeUtils.castToJavaBean(webSocketMessage, BinaryMessage.class);
 
             if (org.springframework.util.TypeUtils.isAssignable(ByteBuffer.class, type)) {
                 return binaryMessage.getPayload();

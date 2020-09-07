@@ -83,7 +83,7 @@ public class WsMappingHandlerMethodMetadata {
         if (org.springframework.util.TypeUtils.isAssignable(PongMessage.class, message.getClass())) {
             return;
         }
-        final TextMessage textMessage = TypeUtils.cast(message, TextMessage.class, ParserConfig.getGlobalInstance());
+        final TextMessage textMessage = TypeUtils.castToJavaBean(message, TextMessage.class);
         final Object validateBean = JSON.parseObject(textMessage.getPayload(), inboundBeanClazz);
         int index = 0;
         boolean exprMatched = false;

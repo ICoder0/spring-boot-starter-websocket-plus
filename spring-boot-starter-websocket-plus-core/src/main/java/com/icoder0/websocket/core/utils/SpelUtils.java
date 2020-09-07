@@ -42,11 +42,11 @@ public class SpelUtils {
         }
 
         public String getStringResult(){
-            return TypeUtils.cast(this.result, String.class, ParserConfig.getGlobalInstance());
+            return TypeUtils.castToString(this.result);
         }
 
         public Boolean getBooleanResult(){
-            return TypeUtils.cast(this.result, Boolean.class, ParserConfig.getGlobalInstance());
+            return TypeUtils.castToBoolean(this.result);
         }
     }
 }
