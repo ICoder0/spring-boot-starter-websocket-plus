@@ -37,7 +37,7 @@ public class WsBootStrap {
     @WebsocketMethodMapping("#inbound.code == 1003")
     public void logout(WebSocketSession webSocketSession, @NotBlank @Size(min = 4, max = 6) String account) {
         log.info("{} logout", account);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emitAuto(WsOutboundBean.ok().body(ImmutableMap.of(
                 "account", account
         )), webSocketSession);
     }
@@ -46,7 +46,7 @@ public class WsBootStrap {
     public void testBinaryMessage(WebSocketSession webSocketSession, BinaryMessage binaryMessage) {
         final String hex = ByteUtils.bytes2Hex(binaryMessage.getPayload().array());
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emitAuto(WsOutboundBean.ok().body(ImmutableMap.of(
                 "testBinaryMessage", binaryMessage.getPayload()
         )), webSocketSession);
     }
@@ -58,7 +58,7 @@ public class WsBootStrap {
     public void testBinaryMessage(WebSocketSession webSocketSession, byte[] bytes) {
         final String hex = ByteUtils.bytes2Hex(bytes);
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emitAuto(WsOutboundBean.ok().body(ImmutableMap.of(
                 "testBinaryMessage", bytes
         )), webSocketSession);
     }
