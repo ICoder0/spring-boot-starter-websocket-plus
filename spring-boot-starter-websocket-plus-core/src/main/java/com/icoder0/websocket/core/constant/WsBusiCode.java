@@ -1,4 +1,4 @@
-package com.icoder0.websocket.core.model;
+package com.icoder0.websocket.core.constant;
 
 import lombok.Getter;
 
