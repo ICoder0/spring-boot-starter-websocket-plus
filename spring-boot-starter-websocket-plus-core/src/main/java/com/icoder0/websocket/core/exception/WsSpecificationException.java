@@ -1,6 +1,6 @@
 package com.icoder0.websocket.core.exception;
 
-import com.icoder0.websocket.core.model.WsBusiCode;
+import com.icoder0.websocket.core.constant.WsBusiCode;
 
 /**
  * @author bofa1ex
