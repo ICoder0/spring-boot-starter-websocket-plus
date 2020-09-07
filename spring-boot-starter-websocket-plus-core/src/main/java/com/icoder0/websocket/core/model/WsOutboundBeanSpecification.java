@@ -6,7 +6,7 @@ package com.icoder0.websocket.core.model;
  */
 public interface WsOutboundBeanSpecification {
 
-    Object sequence();
+    Long sequence();
 
-    void setSequence(Object sequence);
+    void setSequence(Long sequence);
 }
