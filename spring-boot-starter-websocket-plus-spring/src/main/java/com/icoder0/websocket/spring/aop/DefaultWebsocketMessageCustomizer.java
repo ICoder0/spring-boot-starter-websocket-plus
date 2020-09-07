@@ -18,9 +18,6 @@ import javax.annotation.Resource;
  */
 public class DefaultWebsocketMessageCustomizer implements WebsocketMessageCustomizer {
 
-    @Resource
-    protected WebsocketPlusProperties websocketPlusProperties;
-
     @Override
     public void customize(WebSocketSession session, WebSocketMessage<?> message) {
         final String payloadFunctionCodeDecodeName  = WebsocketPlusProperties.payloadFunctionCodeDecodeName;
