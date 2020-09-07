@@ -1,6 +1,8 @@
 package com.icoder0.websocket.spring.utils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.util.TypeUtils;
+import com.icoder0.websocket.core.constant.WsAttributeConstant;
 import com.icoder0.websocket.core.model.WsOutboundBeanSpecification;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import lombok.experimental.UtilityClass;
@@ -10,6 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author bofa1ex
@@ -19,8 +22,22 @@ import java.util.Optional;
 @UtilityClass
 public class WebsocketMessageEmitter {
 
-    public <T extends WsOutboundBeanSpecification> void emit(T data, WebSocketSession session) {
-        _autoInjectSequence(data,session);
+    /**
+     * 下发消息序号与上行数据一致.
+     */
+    public <T extends WsOutboundBeanSpecification> void emitAuto(T data, WebSocketSession session) {
+        _autoInjectSequence(data, session);
+        final String json = JSON.toJSONString(data);
+        log.info("{} OUTBOUND {}", session.getRemoteAddress(), json);
+        try {
+            session.sendMessage(new TextMessage(json));
+        } catch (IOException e) {
+            log.error("{} send message {} error", session, data);
+        }
+    }
+
+    public <T extends WsOutboundBeanSpecification> void emitIncr(T data, WebSocketSession session) {
+        _autoInjectIncrementSequence(data, session);
         final String json = JSON.toJSONString(data);
         log.info("{} OUTBOUND {}", session.getRemoteAddress(), json);
         try {
@@ -41,9 +58,22 @@ public class WebsocketMessageEmitter {
         }
     }
 
-    <T extends WsOutboundBeanSpecification> void _autoInjectSequence(T data, WebSocketSession session){
+    <T extends WsOutboundBeanSpecification> void _autoInjectSequence(T data, WebSocketSession session) {
         /* @see DefaultWebsocketMessageCustomizer#customize, 默认在原生缓存attributes中注入了上行数据得到的函数枚举和消息序号. */
-        data.setSequence(Optional.ofNullable(data.sequence()).orElse(session.getAttributes().get(WebsocketPlusProperties.payloadSequenceDecodeName)));
+        data.setSequence(Optional.ofNullable(data.sequence()).orElse(
+                TypeUtils.castToLong(session.getAttributes().getOrDefault(
+                        WsAttributeConstant.IMMUTABLE_SEQUENCE, 0L
+                ))
+        ));
+    }
+
+    <T extends WsOutboundBeanSpecification> void _autoInjectIncrementSequence(T data, WebSocketSession session) {
+        /* @see DefaultWebsocketMessageCustomizer#customize, 默认在原生缓存attributes中注入了上行数据得到的函数枚举和消息序号. */
+        data.setSequence(Optional.ofNullable(data.sequence()).orElse(
+                TypeUtils.castToJavaBean(session.getAttributes().getOrDefault(
+                        WsAttributeConstant.VARIABLE_SEQUENCE, new AtomicLong()
+                ), AtomicLong.class).incrementAndGet())
+        );
     }
 
 }

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
+import com.icoder0.websocket.core.constant.WsAttributeConstant;
 import com.icoder0.websocket.core.model.WsInboundBeanSpecification;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import org.springframework.web.socket.TextMessage;
@@ -11,6 +12,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.Resource;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author bofa1ex
@@ -20,14 +22,13 @@ public class DefaultWebsocketMessageCustomizer implements WebsocketMessageCustom
 
     @Override
     public void customize(WebSocketSession session, WebSocketMessage<?> message) {
-        final String payloadFunctionCodeDecodeName  = WebsocketPlusProperties.payloadFunctionCodeDecodeName;
-        final String payloadSequenceDecodeName      = WebsocketPlusProperties.payloadSequenceDecodeName;
-
         if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, message.getClass())) {
-            final TextMessage textMessage = TypeUtils.cast(message, TextMessage.class, ParserConfig.getGlobalInstance());
+            final TextMessage textMessage = TypeUtils.castToJavaBean(message, TextMessage.class);
             final WsInboundBeanSpecification wsInboundBeanSpecification = JSON.parseObject(textMessage.getPayload(), WebsocketPlusProperties.inboundBeanClazz);
-            session.getAttributes().put(payloadSequenceDecodeName, wsInboundBeanSpecification.sequence());
-            session.getAttributes().put(payloadFunctionCodeDecodeName, wsInboundBeanSpecification.functionCode());
+
+            session.getAttributes().put(WsAttributeConstant.IMMUTABLE_SEQUENCE, wsInboundBeanSpecification.sequence());
+            session.getAttributes().put(WsAttributeConstant.VARIABLE_SEQUENCE, new AtomicLong(wsInboundBeanSpecification.sequence()));
+            session.getAttributes().put(WsAttributeConstant.FUNCTION_CODE, wsInboundBeanSpecification.functionCode());
         }
     }
 }
