@@ -150,7 +150,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                 !org.springframework.util.TypeUtils.isAssignable(WsOutboundBeanSpecification.class, method.getReturnType()))
         ){
             throw new WsSpecificationException(String.format(
-                    RESPONSE_PARAMETER_OUTBOUND_SPECIFICATION_ERROR, method
+                    WsExceptionTemplate.RESPONSE_PARAMETER_OUTBOUND_SPECIFICATION_ERROR, method
             ));
         }
         final List<WsMappingHandlerMethodParameterMetadata> parameterMetadataList = new LinkedList<>();
