@@ -16,17 +16,46 @@
 ```java
 启动类声明 @EnableWebsocketPlus即可.
 
-@WebsocketMapping("/api/mirai")
-public class WsBootStrap{
+@WebsocketMapping(value = "/api/xxxx", prototype = true)
+public class WsSecurityController{
+    // 入参类型@WebsocketHeader可获取header字段(sequence,version,functionCode,etc)
+    // 比如 @WebsocketHeader(isSequence = true) Long seq.
+    // @WebsocketHeader(isFunctionCode = true) Integer code.
+    // @WebsocketHeader("version") Integer version.
+    // 入参类型@WebsocketPayload可获取params业务参数内部的参数值.
+    // 比如 @WebsocketPayload("account") String account.
     @WebsocketMethodMapping("#inbound.code == 1001")
-    public WsOutboundBean<?> login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
+    public WsOutboundBean<?> login(WebSocketSession session, 
+                                   @WebsocketHeader("version") Integer version,
+                                   @WebsocketHeader(isSequence = true) Long sequence,
+                                   @Validated WsLoginVO req
+    ) {
         log.info("login {}", req);
-        webSocketSession.getAttributes().put("account", req.getAccount());
+        session.getAttributes().put("account", req.getAccount());
         return WsOutboundBean.ok().body(ImmutableMap.of(
                 "hello", "world"
         ));
     }
-    // 返参会自动装配成下行TextMessage类型并下发.
+    // 返参必须是WsOutboundBeanSpecification类型或者Void类型.
+    // 如果是WsOutboundBeanSpecification类型, 会自动下发数据.
+}
+
+@WebsocketMapping(value = "/api/xxxx", prototype = true)
+public class WsBusinessController{
+    @WebsocketMethodMapping("#inbound.code == 2001")
+    public WsOutboundBean<?> login2(WebSocketSession session, 
+                                   @WebsocketHeader("version") Integer version,
+                                   @WebsocketHeader(isSequence = true) Long sequence,
+                                   @Validated WsLoginVO req
+    ) {
+        log.info("login2 {}", req);
+        session.getAttributes().put("account", req.getAccount());
+        return WsOutboundBean.ok().body(ImmutableMap.of(
+                "hello", "world"
+        ));
+    }
+    // 返参必须是WsOutboundBeanSpecification类型或者Void类型.
+    // 如果是WsOutboundBeanSpecification类型, 会自动下发数据.
 }
 ```
 
