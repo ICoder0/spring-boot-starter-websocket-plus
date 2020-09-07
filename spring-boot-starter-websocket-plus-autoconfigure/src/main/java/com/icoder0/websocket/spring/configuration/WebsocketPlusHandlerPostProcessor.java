@@ -6,7 +6,9 @@ import com.icoder0.websocket.annotation.WebsocketMethodMapping;
 import com.icoder0.websocket.annotation.WebsocketPayload;
 import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.exception.WsExceptionTemplate;
+import com.icoder0.websocket.core.exception.WsSpecificationException;
 import com.icoder0.websocket.core.model.WsBusiCode;
+import com.icoder0.websocket.core.model.WsOutboundBeanSpecification;
 import com.icoder0.websocket.spring.WebsocketArchetypeHandler;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import com.icoder0.websocket.spring.model.WsMappingHandlerMetadata;
@@ -38,6 +40,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.icoder0.websocket.core.exception.WsExceptionTemplate.RESPONSE_PARAMETER_OUTBOUND_SPECIFICATION_ERROR;
 
 /**
  * @author bofa1ex
@@ -141,6 +145,14 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
     }
 
     List<WsMappingHandlerMethodParameterMetadata> _mapperMethodParameters(Method method) {
+        if (Boolean.logicalAnd(
+                !org.springframework.util.TypeUtils.isAssignable(Void.class, method.getReturnType()),
+                !org.springframework.util.TypeUtils.isAssignable(WsOutboundBeanSpecification.class, method.getReturnType()))
+        ){
+            throw new WsSpecificationException(String.format(
+                    RESPONSE_PARAMETER_OUTBOUND_SPECIFICATION_ERROR, method
+            ));
+        }
         final List<WsMappingHandlerMethodParameterMetadata> parameterMetadataList = new LinkedList<>();
         for (final Parameter parameter : method.getParameters()) {
             final Class<?> parameterType = parameter.getType();
