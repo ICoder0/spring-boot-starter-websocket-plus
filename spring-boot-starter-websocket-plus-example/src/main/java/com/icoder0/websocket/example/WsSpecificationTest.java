@@ -22,7 +22,7 @@ public class WsSpecificationTest {
      * 如果业务参数中有字段名与header系统字段冲突, 需要声明@WebsocketPayload, 并声明该字段在payload中的字段名, 否则编译阶段不通过.
      */
     @WebsocketMethodMapping("#inbound.code == 8001")
-    public WsOutboundBean<?> login2(WebSocketSession session,
+    public String login2(WebSocketSession session,
                                     @WebsocketHeader(isSequence = true) Long seq,
                                     @WebsocketPayload(value = "sequence") Long nestSeq,
                                     @WebsocketHeader(isFunctionCode = true) Integer code,
@@ -32,9 +32,7 @@ public class WsSpecificationTest {
                                     @WebsocketPayload("params") Map<String, Object> innerParams
     ) {
         log.info("test#seq {}", seq);
-        return WsOutboundBean.ok(ImmutableMap.of(
-                "hello", "world"
-        ));
+        return "123";
     }
 
     @Data
