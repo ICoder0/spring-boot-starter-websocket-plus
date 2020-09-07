@@ -86,6 +86,6 @@ websocket-plus:
     - http://test.domain.com
 ```
 
-文档参见Wiki https://github.com/ICoder0/spring-boot-starter-websocket-plus.wiki.git
+文档参见Wiki https://github.com/ICoder0/spring-boot-starter-websocket-plus/wiki
 
 如有需求提issue.
