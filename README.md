@@ -38,12 +38,19 @@ websocket-plus:
   maxSessionIdleTimeout: 66000
   maxTextMessageBufferSize: 20480
   maxBinaryMessageBufferSize: 20480
+  # 上行数据规范WsInboundBeanSpecification接口
   inboundBeanClazz: com.icoder0.websocket.core.model.WsInboundBean
+  # 下行数据规范WsOutboundBeanSpecification接口
   outboundBeanClazz: com.icoder0.websocket.core.model.WsOutboundBean
+  # 上行数据规范信息
   inboundSpecification: {seq:0, code:xxx, version:0, params:{}}
+  # 下行数据规范信息
   outboundSpecification: {seq:0, code:xxx, message:{"this is message"}, content:{}}
+  # 上行数据header字段#params业务参数
   payloadParamsDecodeName: params
+  # 上行数据header字段#sequence消息序号
   payloadSequenceDecodeName: sequence
+  # 上行数据header字段#functionCode函数枚举
   payloadFunctionCodeDecodeName: code
   spelVariableName: inbound
   origins:
