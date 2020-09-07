@@ -19,7 +19,7 @@
 @WebsocketMapping("/api/mirai")
 public class WsBootStrap{
     @WebsocketMethodMapping("#inbound.code == 1001")
-    public WsOutboundBean login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
+    public WsOutboundBean<?> login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
         log.info("login {}", req);
         webSocketSession.getAttributes().put("account", req.getAccount());
         return WsOutboundBean.ok().body(ImmutableMap.of(
@@ -36,15 +36,17 @@ public class WsBootStrap{
 websocket-plus:
   asyncSendTimeout: 8000
   maxSessionIdleTimeout: 66000
-  # 上行外层数据格式 like {"seq":0,"version":0,"params":{},"code":1001}, 默认WsInboundBean.
-  outerDecodeClazz: com.icoder0.mirai4j.websocket.model.WsInboundBeanEx
   maxTextMessageBufferSize: 20480
   maxBinaryMessageBufferSize: 20480
-  # 上行内层数据的key like {..., "params": {"account":123123}, ...}
-  innerDecodeParamKeyName: params
-  # @WebsocketMethodMapping(expr="#req.code == 1001")
-  spelRootName: req
-  allowedOrigins:
+  inboundBeanClazz: com.icoder0.websocket.core.model.WsInboundBean
+  outboundBeanClazz: com.icoder0.websocket.core.model.WsOutboundBean
+  inboundSpecification: {seq:0, code:xxx, version:0, params:{}}
+  outboundSpecification: {seq:0, code:xxx, message:{"this is message"}, content:{}}
+  payloadParamsDecodeName: params
+  payloadSequenceDecodeName: sequence
+  payloadFunctionCodeDecodeName: code
+  spelVariableName: inbound
+  origins:
     - http://test.domain.com
 ```
 
