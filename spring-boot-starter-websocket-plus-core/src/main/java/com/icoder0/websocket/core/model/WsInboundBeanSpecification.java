@@ -8,7 +8,7 @@ package com.icoder0.websocket.core.model;
  */
 public interface WsInboundBeanSpecification {
 
-    Object sequence();
+    Long sequence();
 
     Object functionCode();
 
