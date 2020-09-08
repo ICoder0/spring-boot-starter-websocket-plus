@@ -47,8 +47,8 @@ public class WsExceptionTemplate {
 
         REQUEST_PARAMETER_NONE_MATCH                                =       "%s #%s is required";
 
-        CONSTRAINT_VIOLATION_VALIDATE_ERROR                         =       "#%1s IS NOT VALID\n" +
-                                                                            "#REQUIRED {%2s %1s}";
+        CONSTRAINT_VIOLATION_VALIDATE_ERROR                         =       "#%1$s IS NOT VALID\n" +
+                                                                            "#REQUIRED {%2$s %1$s}";
 
         REQUEST_PARAMETER_INBOUND_SPECIFICATION_ERROR               =       "检查inbound规范 %s";
 
