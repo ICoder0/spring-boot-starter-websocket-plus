@@ -12,11 +12,10 @@ public class WsExceptionTemplate {
     public static final String METHOD_MAPPING_EXPRESSION_CONFLICT;
     public static final String METHOD_MAPPING_NONE_MATCH;
 
-    public static final String REQUEST_PARAMETER_NONE_MATCH;
     public static final String REQUEST_PARAMETER_INBOUND_SPECIFICATION_ERROR;
     public static final String REQUEST_PARAMETER_HEADER_PARAMS_SPECIFICATION_ERROR;
     public static final String REQUEST_PARAMETER_HEADER_SEQUENCE_SPECIFICATION_ERROR;
-    public static final String REQUEST_PARAMETER_HEADER_FUNCTION_CODE_SPECIFICATION_ERROR;
+    public static final String REQUEST_PARAMETER_HEADER_TOPIC_SPECIFICATION_ERROR;
 
     public static final String RESPONSE_PARAMETER_OUTBOUND_SPECIFICATION_ERROR;
 
@@ -45,8 +44,6 @@ public class WsExceptionTemplate {
 
         METHOD_MAPPING_NONE_MATCH                                   =       "%s 未匹配到WebsocketMethodMapping路由";
 
-        REQUEST_PARAMETER_NONE_MATCH                                =       "%s #%s is required";
-
         CONSTRAINT_VIOLATION_VALIDATE_ERROR                         =       "#%1$s IS NOT VALID\n" +
                                                                             "#REQUIRED {%2$s %1$s}";
 
@@ -58,6 +55,6 @@ public class WsExceptionTemplate {
 
         REQUEST_PARAMETER_HEADER_SEQUENCE_SPECIFICATION_ERROR       =       "检查header#消息序号变量名规范 %s";
 
-        REQUEST_PARAMETER_HEADER_FUNCTION_CODE_SPECIFICATION_ERROR  =       "检查header#函数枚举变量名规范 %s";
+        REQUEST_PARAMETER_HEADER_TOPIC_SPECIFICATION_ERROR          =       "检查header#订阅主题变量名规范 %s";
     }
 }
