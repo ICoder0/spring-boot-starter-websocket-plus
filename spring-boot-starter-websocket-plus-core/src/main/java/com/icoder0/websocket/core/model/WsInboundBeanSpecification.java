@@ -10,7 +10,7 @@ public interface WsInboundBeanSpecification {
 
     Long sequence();
 
-    Object functionCode();
+    String topic();
 
     String params();
 }
