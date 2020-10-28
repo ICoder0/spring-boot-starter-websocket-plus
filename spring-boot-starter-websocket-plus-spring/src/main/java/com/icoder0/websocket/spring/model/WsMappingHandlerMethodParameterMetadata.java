@@ -10,6 +10,7 @@ import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import io.netty.buffer.*;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.socket.*;
 
@@ -19,6 +20,7 @@ import java.nio.ByteBuffer;
  * @author bofa1ex
  * @since 2020/8/28
  */
+@Slf4j
 @Builder
 public class WsMappingHandlerMethodParameterMetadata {
 
@@ -51,6 +53,9 @@ public class WsMappingHandlerMethodParameterMetadata {
             }
             // 优先从payload层级提取数据.
             if (payload.containsKey(name)){
+                if (payloadParams.containsKey(name) && log.isWarnEnabled()){
+                    log.warn("{} 存在重复字段 {}, 优先考虑提取外层字段值 {}", session.getRemoteAddress(), name, payload);
+                }
                 return payload.getObject(name, type);
             }
             // 从payload#params层级提取, 并判断是否需要设置默认值(require&defaultValue).

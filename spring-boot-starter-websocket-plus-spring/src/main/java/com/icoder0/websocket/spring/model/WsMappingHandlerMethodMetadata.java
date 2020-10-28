@@ -9,12 +9,14 @@ import com.icoder0.websocket.core.utils.Assert;
 import com.icoder0.websocket.core.utils.SpelUtils;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.*;
 
 
 import javax.validation.*;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
  * @author bofa1ex
  * @since 2020/8/17
  */
+@Slf4j
 @Builder
 public class WsMappingHandlerMethodMetadata {
 
@@ -39,6 +42,7 @@ public class WsMappingHandlerMethodMetadata {
     private final Method method;
     @Getter
     private final Object bean;
+
     private final List<WsMappingHandlerMethodParameterMetadata> parameters;
 
     public Object[] extractArgs(WebSocketSession session, WebSocketMessage<?> message) {
@@ -49,6 +53,9 @@ public class WsMappingHandlerMethodMetadata {
             final WsMappingHandlerMethodParameterMetadata parameter = parameters.get(i);
             // message根据parameter提取有效数据.
             final Object validateBean = parameter.extractArg(session, message);
+            if (Objects.isNull(validateBean) && log.isWarnEnabled()){
+                log.warn("{} 提取字段[{}]值为空", session, parameter.getName());
+            }
             if (parameter.isValidated()) {
                 // 检查提取出的有效数据是否符合constraints要求.
                 Optional.ofNullable(validator.validate(validateBean)).ifPresent(this::_checkViolations);
