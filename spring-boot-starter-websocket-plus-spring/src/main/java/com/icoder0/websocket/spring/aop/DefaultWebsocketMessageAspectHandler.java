@@ -31,7 +31,7 @@ public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAsp
         final Class<? extends WsInboundBeanSpecification> inboundBeanClazz = WebsocketPlusProperties.inboundBeanClazz;
         final String inboundSpecification           = WebsocketPlusProperties.inboundSpecification;
         final String payloadParamsDecodeName        = WebsocketPlusProperties.payloadParamsDecodeName;
-        final String payloadFunctionCodeDecodeName  = WebsocketPlusProperties.payloadFunctionCodeDecodeName;
+        final String payloadTopicDecodeName         = WebsocketPlusProperties.payloadTopicDecodeName;
         final String payloadSequenceDecodeName      = WebsocketPlusProperties.payloadSequenceDecodeName;
 
         if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, message.getClass())) {
@@ -49,9 +49,9 @@ public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAsp
             Assert.checkCondition(payload.containsKey(payloadParamsDecodeName), () -> new WsSpecificationException(String.format(
                     WsExceptionTemplate.REQUEST_PARAMETER_HEADER_PARAMS_SPECIFICATION_ERROR, payloadParamsDecodeName
             )));
-            // check inbound bean#functionCode specification.
-            Assert.checkCondition(payload.containsKey(payloadFunctionCodeDecodeName), () -> new WsSpecificationException(String.format(
-                    WsExceptionTemplate.REQUEST_PARAMETER_HEADER_FUNCTION_CODE_SPECIFICATION_ERROR, payloadFunctionCodeDecodeName
+            // check inbound bean#topic specification.
+            Assert.checkCondition(payload.containsKey(payloadTopicDecodeName), () -> new WsSpecificationException(String.format(
+                    WsExceptionTemplate.REQUEST_PARAMETER_HEADER_TOPIC_SPECIFICATION_ERROR, payloadTopicDecodeName
             )));
         }
     }
@@ -63,7 +63,7 @@ public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAsp
             return;
         }
         // 如果复写该方法, 切记一定需要提供下发下行数据的逻辑.
-        WebsocketMessageEmitter.emitAuto(outboundBean, session);
+        WebsocketMessageEmitter.emit(outboundBean, session);
     }
 
     @Override

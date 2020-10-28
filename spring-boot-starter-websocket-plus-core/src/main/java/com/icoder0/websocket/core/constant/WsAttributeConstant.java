@@ -6,9 +6,7 @@ package com.icoder0.websocket.core.constant;
  */
 public interface WsAttributeConstant {
 
-    String IMMUTABLE_SEQUENCE = "IMMUTABLE_SEQUENCE";
+    String SEQUENCE = "SEQUENCE";
 
-    String VARIABLE_SEQUENCE = "VARIABLE_SEQUENCE";
-
-    String FUNCTION_CODE = "FUNCTION_CODE";
+    String TOPIC = "TOPIC";
 }
