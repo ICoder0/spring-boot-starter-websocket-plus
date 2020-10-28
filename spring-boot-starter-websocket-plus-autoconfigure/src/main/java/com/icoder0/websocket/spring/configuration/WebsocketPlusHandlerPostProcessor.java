@@ -1,6 +1,5 @@
 package com.icoder0.websocket.spring.configuration;
 
-import com.icoder0.websocket.annotation.WebsocketHeader;
 import com.icoder0.websocket.annotation.WebsocketMapping;
 import com.icoder0.websocket.annotation.WebsocketMethodMapping;
 import com.icoder0.websocket.annotation.WebsocketPayload;
@@ -145,9 +144,9 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
 
     List<WsMappingHandlerMethodParameterMetadata> _mapperMethodParameters(Method method) {
         if (Boolean.logicalAnd(
-                !org.springframework.util.TypeUtils.isAssignable(Void.class, method.getReturnType()),
-                !org.springframework.util.TypeUtils.isAssignable(WsOutboundBeanSpecification.class, method.getReturnType()))
-        ){
+                org.springframework.util.TypeUtils.isAssignable(Void.class, method.getReturnType()),
+                org.springframework.util.TypeUtils.isAssignable(WsOutboundBeanSpecification.class, method.getReturnType()))
+        ) {
             throw new WsSpecificationException(String.format(
                     WsExceptionTemplate.RESPONSE_PARAMETER_OUTBOUND_SPECIFICATION_ERROR, method
             ));
@@ -157,47 +156,26 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
             final Class<?> parameterType = parameter.getType();
             String parameterName = parameter.getName();
             String parameterDefaultValue = null;
-            boolean parameterRequired = false;
             boolean needValidated = false;
-            boolean isHeader = false;
-            boolean isNormal = true;
-            /*
-             * 1. check parameter whether need nest-validate.
-             * 2. process parameter which modify by WebsocketPayload.
-             * 3. process parameter which modify by WebsocketHeader.
-             */
+            boolean needRequired = true;
+
             for (Annotation annotation : parameter.getAnnotations()) {
                 final WebsocketPayload websocketPayload = AnnotationUtils.getAnnotation(annotation, WebsocketPayload.class);
-                final WebsocketHeader websocketHeader = AnnotationUtils.getAnnotation(annotation, WebsocketHeader.class);
-
                 if (AnnotatedElementUtils.hasAnnotation(parameter, Validated.class)) {
                     needValidated = true;
                 }
                 if (Objects.nonNull(websocketPayload)) {
-                    isNormal = false;
                     parameterName = websocketPayload.name();
+                    needRequired = websocketPayload.required();
                     parameterDefaultValue = websocketPayload.defaultValue();
-                    parameterRequired = websocketPayload.required();
-                }
-                if (Objects.nonNull(websocketHeader)) {
-                    isNormal = false;
-                    isHeader = true;
-                    parameterName = websocketHeader.isSequence() ? WebsocketPlusProperties.payloadSequenceDecodeName : null;
-                    parameterName = Objects.isNull(parameterName) ?
-                            websocketHeader.isFunctionCode() ? WebsocketPlusProperties.payloadFunctionCodeDecodeName : null : parameterName;
                 }
             }
             parameterMetadataList.add(WsMappingHandlerMethodParameterMetadata.builder()
-                    .inboundBeanClazz(WebsocketPlusProperties.inboundBeanClazz)
-                    .payloadParamsDecodeName(WebsocketPlusProperties.payloadParamsDecodeName)
                     .type(parameterType)
-                    .method(method)
-                    .isHeader(isHeader)
-                    .isNormal(isNormal)
-                    .require(parameterRequired)
+                    .required(needRequired)
+                    .validated(needValidated)
                     .defaultValue(parameterDefaultValue)
                     .name(parameterName)
-                    .validated(needValidated)
                     .build()
             );
         }

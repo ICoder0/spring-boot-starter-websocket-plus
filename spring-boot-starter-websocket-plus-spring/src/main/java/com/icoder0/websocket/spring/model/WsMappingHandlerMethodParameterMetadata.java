@@ -2,16 +2,17 @@ package com.icoder0.websocket.spring.model;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.constant.WsBusiCode;
+import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import io.netty.buffer.*;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.socket.*;
 
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
 /**
@@ -21,23 +22,13 @@ import java.nio.ByteBuffer;
 @Builder
 public class WsMappingHandlerMethodParameterMetadata {
 
-    private final Class<?> inboundBeanClazz;
-
-    private final String payloadParamsDecodeName;
-
-    private final Method method;
     @Getter
     private final String name;
-    private final String defaultValue;
-    private final boolean require;
-
-    private final Class<?> type;
     @Getter
     private final boolean validated;
-
-    /* method-parameter state */
-    private final boolean isHeader;
-    private final boolean isNormal;
+    private final boolean required;
+    private final Class<?> type;
+    private final String defaultValue;
 
     /**
      * 只考虑抽取的逻辑.
@@ -53,14 +44,20 @@ public class WsMappingHandlerMethodParameterMetadata {
             }
             final TextMessage textMessage = TypeUtils.castToJavaBean(webSocketMessage, TextMessage.class);
             final JSONObject payload = JSON.parseObject(textMessage.getPayload());
-            final JSONObject payloadParams = payload.getJSONObject(payloadParamsDecodeName);
-            return isNormal ?
-                    ClassUtils.isPrimitiveOrWrapper(type) || org.springframework.util.TypeUtils.isAssignable(CharSequence.class, type) ?
-                    // 如果没有@WebsocketPayload和@WebsocketHeader修饰
-                    // 如果是基本类型或者CharSequence类型, 则从payload#params中提取, 反之Map,Pojo类型从payload当前层级提取.
-                    payloadParams.getObject(name, type) : payload.getObject(payloadParamsDecodeName, type) : isHeader ?
-                    // 如果是@WebsocketHeader, 从payload当前层级中提取, 反之从payload#params中提取.
-                    payload.getObject(name, type) : payloadParams.getObject(name, type);
+            final JSONObject payloadParams = payload.getJSONObject(WebsocketPlusProperties.payloadParamsDecodeName);
+            // 非基本数据类型&字符串类型直接由payload#params转换.
+            if (! (ClassUtils.isPrimitiveOrWrapper(type) || org.springframework.util.TypeUtils.isAssignable(CharSequence.class, type))){
+                return payload.getObject(WebsocketPlusProperties.payloadParamsDecodeName, type);
+            }
+            // 优先从payload层级提取数据.
+            if (payload.containsKey(name)){
+                return payload.getObject(name, type);
+            }
+            // 从payload#params层级提取, 并判断是否需要设置默认值(require&defaultValue).
+            if (payloadParams.containsKey(name)){
+                final Object arg = payloadParams.getObject(name, type);
+                return arg == null && required ? TypeUtils.cast(defaultValue, type, ParserConfig.getGlobalInstance()) : arg;
+            }
         }
 
         if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, webSocketMessage.getClass())) {
