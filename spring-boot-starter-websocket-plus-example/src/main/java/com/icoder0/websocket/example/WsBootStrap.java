@@ -24,47 +24,46 @@ import javax.validation.constraints.Size;
 @WebsocketMapping(value = "/api/mirai", prototype = true)
 public class WsBootStrap {
 
-    @WebsocketMethodMapping("#inbound.code == 1001")
+    @WebsocketMethodMapping("#inbound.topic == 'login'")
     public WsOutboundBean<?> login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
         log.info("login {}", req);
         webSocketSession.getAttributes().put("account", req.getAccount());
-        return WsOutboundBean.ok()
-                .body(ImmutableMap.of(
-                        "hello", "world"
-                ));
+        return WsOutboundBean.ok().body(ImmutableMap.of(
+                "hello", "world"
+        ));
     }
 
-    @WebsocketMethodMapping("#inbound.code == 1003")
+    @WebsocketMethodMapping("#inbound.topic == 1003")
     public void logout(WebSocketSession webSocketSession, @NotBlank @Size(min = 4, max = 6) String account) {
         log.info("{} logout", account);
-        WebsocketMessageEmitter.emitAuto(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
                 "account", account
         )), webSocketSession);
     }
 
-    @WebsocketMethodMapping("#inbound.code == 1004")
+    @WebsocketMethodMapping("#inbound.topic == 1004")
     public void testBinaryMessage(WebSocketSession webSocketSession, BinaryMessage binaryMessage) {
         final String hex = ByteUtils.bytes2Hex(binaryMessage.getPayload().array());
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emitAuto(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
                 "testBinaryMessage", binaryMessage.getPayload()
         )), webSocketSession);
     }
 
     @WebsocketMethodMapping({
-            "#inbound.code == 1005",
+            "#inbound.topic == '1005'",
             "#inbound.version > 3"
     })
     public void testBinaryMessage(WebSocketSession webSocketSession, byte[] bytes) {
         final String hex = ByteUtils.bytes2Hex(bytes);
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emitAuto(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
                 "testBinaryMessage", bytes
         )), webSocketSession);
     }
 
     @WebsocketMethodMapping({
-            "#inbound.code == 1006",
+            "#inbound.topic == 1006",
             "#inbound.version > 3"
     })
     public WsOutboundBean<?> testNestMessage(ParentVO req) {
