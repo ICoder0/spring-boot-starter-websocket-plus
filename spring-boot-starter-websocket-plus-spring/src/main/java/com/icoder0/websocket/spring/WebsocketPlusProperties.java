@@ -36,13 +36,13 @@ public class WebsocketPlusProperties {
     public static Class<? extends WsOutboundBeanSpecification> outboundBeanClazz  = WsOutboundBean.class;
 
     /** specification */
-    public static String inboundSpecification                                     = "{seq:0, code:xxx, version:0, params:{}}";
-    public static String outboundSpecification                                    = "{seq:0, code:xxx, message:{\"this is message\"}, content:{}}";
+    public static String inboundSpecification                                     = "{seq:0, topic:xxx, version:0, params:{}}";
+    public static String outboundSpecification                                    = "{seq:0, topic:xxx, message:{\"this is message\"}, content:{}}";
 
     /** inbound decode-field-name */
     public static String payloadParamsDecodeName                                  = "params";
     public static String payloadSequenceDecodeName                                = "sequence";
-    public static String payloadFunctionCodeDecodeName                            = "code";
+    public static String payloadTopicDecodeName                                   = "topic";
 
     /** spel properties */
     public static String spelVariableName                                         = "inbound";
@@ -96,7 +96,7 @@ public class WebsocketPlusProperties {
     }
 
     public void setPayloadFunctionCodeDecodeName(String payloadFunctionCodeDecodeName) {
-        WebsocketPlusProperties.payloadFunctionCodeDecodeName = payloadFunctionCodeDecodeName;
+        WebsocketPlusProperties.payloadTopicDecodeName = payloadFunctionCodeDecodeName;
     }
 
     public void setSpelVariableName(String spelVariableName) {
