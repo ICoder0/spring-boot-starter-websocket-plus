@@ -18,18 +18,10 @@
 
 @WebsocketMapping(value = "/api/xxxx", prototype = true)
 public class WsSecurityController{
-    // 入参类型@WebsocketHeader可获取header字段(sequence,version,functionCode,etc)
-    // 比如 @WebsocketHeader(isSequence = true) Long seq.
-    // @WebsocketHeader(isFunctionCode = true) Integer code.
-    // @WebsocketHeader("version") Integer version.
     // 入参类型@WebsocketPayload可获取params业务参数内部的参数值.
     // 比如 @WebsocketPayload("account") String account.
-    @WebsocketMethodMapping("#inbound.code == 1001")
-    public WsOutboundBean<?> login(WebSocketSession session, 
-                                   @WebsocketHeader("version") Integer version,
-                                   @WebsocketHeader(isSequence = true) Long sequence,
-                                   @Validated WsLoginVO req
-    ) {
+    @WebsocketMethodMapping("#inbound.topic == 'login'")
+    public WsOutboundBean<?> login(WebSocketSession session, @Validated WsLoginVO req) {
         log.info("login {}", req);
         session.getAttributes().put("account", req.getAccount());
         return WsOutboundBean.ok().body(ImmutableMap.of(
@@ -42,14 +34,14 @@ public class WsSecurityController{
 
 @WebsocketMapping(value = "/api/xxxx", prototype = true)
 public class WsBusinessController{
-    @WebsocketMethodMapping("#inbound.code == 2001")
+    @WebsocketMethodMapping("#inbound.topic == 'login2'")
     public WsOutboundBean<?> login2(WebSocketSession session, 
-                                   @WebsocketHeader("version") Integer version,
-                                   @WebsocketHeader(isSequence = true) Long sequence,
-                                   @Validated WsLoginVO req
+                                    @NotBlank(message="account不可为空") String account,
+                                    @WebsocketPayload(defaultValue="10") Integer pageSize,
+                                    @WebsocketPayload(defaultValue="0") Integer pageNo
     ) {
-        log.info("login2 {}", req);
-        session.getAttributes().put("account", req.getAccount());
+        log.info("login2 account:{} pageNo:{} pageSize:{}", account, pageNo, pageSize);
+        session.getAttributes().put("account", account);
         return WsOutboundBean.ok().body(ImmutableMap.of(
                 "hello", "world"
         ));
@@ -72,15 +64,15 @@ websocket-plus:
   # 下行数据规范WsOutboundBeanSpecification接口
   outboundBeanClazz: com.icoder0.websocket.core.model.WsOutboundBean
   # 上行数据规范信息
-  inboundSpecification: {seq:0, code:xxx, version:0, params:{}}
+  inboundSpecification: {seq:0, topic:xxx, version:0, params:{}}
   # 下行数据规范信息
-  outboundSpecification: {seq:0, code:xxx, message:{"this is message"}, content:{}}
+  outboundSpecification: {seq:0, topic:'xxx', code:xxx, message:{"this is message"}, content:{}}
   # 上行数据header字段#params业务参数
   payloadParamsDecodeName: params
   # 上行数据header字段#sequence消息序号
   payloadSequenceDecodeName: sequence
   # 上行数据header字段#functionCode函数枚举
-  payloadFunctionCodeDecodeName: code
+  payloadTopicDecodeName: topic
   spelVariableName: inbound
   origins:
     - http://test.domain.com
