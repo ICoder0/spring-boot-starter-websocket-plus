@@ -79,7 +79,7 @@
       "description": "上行数据格式#消息序号对应的变量名"
     },
     {
-      "name": "websocket-plus.payloadFunctionCodeDecodeName",
+      "name": "websocket-plus.payloadTopicDecodeName",
       "type": "java.lang.String",
       "defaultValue": "code",
       "description": "上行数据格式#函数枚举对应的变量名"
