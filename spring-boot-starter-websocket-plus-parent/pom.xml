@@ -49,6 +49,14 @@
         <netty.buffer.version>4.1.48.Final</netty.buffer.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub ICoder0 Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/ICoder0/spring-boot-starter-websocket-plus</url>
+        </repository>
+    </distributionManagement>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
