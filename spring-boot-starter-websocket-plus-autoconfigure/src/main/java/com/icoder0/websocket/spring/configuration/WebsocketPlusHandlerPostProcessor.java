@@ -15,6 +15,7 @@ import com.icoder0.websocket.spring.model.WsMappingHandlerMethodMetadata;
 import com.icoder0.websocket.spring.model.WsMappingHandlerMethodParameterMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,7 +166,7 @@ public class WebsocketPlusHandlerPostProcessor implements ApplicationContextAwar
                     needValidated = true;
                 }
                 if (Objects.nonNull(websocketPayload)) {
-                    parameterName = websocketPayload.name();
+                    parameterName = StringUtils.isBlank(websocketPayload.name()) ? parameterName : websocketPayload.name();
                     needRequired = websocketPayload.required();
                     parameterDefaultValue = websocketPayload.defaultValue();
                 }
