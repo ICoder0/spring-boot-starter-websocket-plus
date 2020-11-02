@@ -8,9 +8,9 @@ public interface WsOutboundBeanSpecification {
 
     Long sequence();
 
-    void setSequence(Long sequence);
+    WsOutboundBeanSpecification setSequence(Long sequence);
 
     String topic();
 
-    void setTopic(String topic);
+    WsOutboundBeanSpecification setTopic(String topic);
 }
