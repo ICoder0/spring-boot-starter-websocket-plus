@@ -28,47 +28,47 @@ public class WsBootStrap {
     public WsOutboundBean<?> login(WebSocketSession webSocketSession, @Validated WsLoginVO req) {
         log.info("login {}", req);
         webSocketSession.getAttributes().put("account", req.getAccount());
-        return WsOutboundBean.ok().body(ImmutableMap.of(
+        return WsOutboundBean.topic("login").ok(ImmutableMap.of(
                 "hello", "world"
         ));
     }
 
-    @WebsocketMethodMapping("#inbound.topic == 1003")
+    @WebsocketMethodMapping("#inbound.topic == 'logout'")
     public void logout(WebSocketSession webSocketSession, @NotBlank @Size(min = 4, max = 6) String account) {
         log.info("{} logout", account);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.topic("logout").ok(ImmutableMap.of(
                 "account", account
         )), webSocketSession);
     }
 
-    @WebsocketMethodMapping("#inbound.topic == 1004")
+    @WebsocketMethodMapping("#inbound.topic == 'testBinary'")
     public void testBinaryMessage(WebSocketSession webSocketSession, BinaryMessage binaryMessage) {
         final String hex = ByteUtils.bytes2Hex(binaryMessage.getPayload().array());
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.topic("testBinary").ok(ImmutableMap.of(
                 "testBinaryMessage", binaryMessage.getPayload()
         )), webSocketSession);
     }
 
     @WebsocketMethodMapping({
-            "#inbound.topic == '1005'",
+            "#inbound.topic == 'testBinary2'",
             "#inbound.version > 3"
     })
     public void testBinaryMessage(WebSocketSession webSocketSession, byte[] bytes) {
         final String hex = ByteUtils.bytes2Hex(bytes);
         log.info("{} binary", hex);
-        WebsocketMessageEmitter.emit(WsOutboundBean.ok().body(ImmutableMap.of(
+        WebsocketMessageEmitter.emit(WsOutboundBean.topic("testBinary2").ok(ImmutableMap.of(
                 "testBinaryMessage", bytes
         )), webSocketSession);
     }
 
     @WebsocketMethodMapping({
-            "#inbound.topic == 1006",
+            "#inbound.topic == 'testNest'",
             "#inbound.version > 3"
     })
     public WsOutboundBean<?> testNestMessage(ParentVO req) {
         log.info("{} testNestMessage", req);
-        return WsOutboundBean.ok().body(ImmutableMap.of(
+        return WsOutboundBean.topic("testNest").ok(ImmutableMap.of(
                 "testNestMessage", req
         ));
     }

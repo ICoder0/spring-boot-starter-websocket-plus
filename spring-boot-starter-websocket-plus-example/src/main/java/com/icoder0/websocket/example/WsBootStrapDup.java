@@ -18,10 +18,10 @@ import javax.validation.constraints.NotNull;
 @WebsocketMapping(value = "/api/mirai", prototype = true)
 public class WsBootStrapDup {
 
-    @WebsocketMethodMapping("#inbound.topic == 1006")
+    @WebsocketMethodMapping("#inbound.topic == 'sub'")
     public WsOutboundBean<?> subTest(@NotNull Long account) {
         log.info("subTest account#{}", account);
-        return WsOutboundBean.ok().body(ImmutableMap.of(
+        return WsOutboundBean.topic("sub").ok(ImmutableMap.of(
                 "hello", "world"
         ));
     }
