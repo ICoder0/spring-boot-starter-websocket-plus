@@ -10,7 +10,7 @@ public interface WsOutboundBeanSpecification {
 
     WsOutboundBeanSpecification setSequence(Long sequence);
 
-    String topic();
+    Long topic();
 
-    WsOutboundBeanSpecification setTopic(String topic);
+    WsOutboundBeanSpecification setTopic(Long topic);
 }
