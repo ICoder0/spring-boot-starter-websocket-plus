@@ -5,7 +5,6 @@ import com.icoder0.websocket.annotation.WebsocketMapping;
 import com.icoder0.websocket.annotation.WebsocketMethodMapping;
 import com.icoder0.websocket.core.model.WsOutboundBean;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.socket.WebSocketSession;
 
 import javax.validation.constraints.NotNull;
 
@@ -18,12 +17,11 @@ import javax.validation.constraints.NotNull;
 @WebsocketMapping(value = "/api/mirai", prototype = true)
 public class WsBootStrapDup {
 
-    @WebsocketMethodMapping("#inbound.topic == 'sub'")
+    @WebsocketMethodMapping("#inbound.topic == 1005")
     public WsOutboundBean<?> subTest(@NotNull Long account) {
         log.info("subTest account#{}", account);
-        return WsOutboundBean.topic("sub").ok(ImmutableMap.of(
+        return WsOutboundBean.topic(WsExampleTopic.TOPIC_1005.topic).ok(ImmutableMap.of(
                 "hello", "world"
         ));
     }
-
 }
