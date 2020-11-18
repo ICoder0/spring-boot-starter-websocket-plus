@@ -37,7 +37,7 @@ public class WebsocketPlusProperties {
 
     /** specification */
     public static String inboundSpecification                                     = "{seq:0, topic:xxx, version:0, params:{}}";
-    public static String outboundSpecification                                    = "{seq:0, topic:xxx, message:{\"this is message\"}, content:{}}";
+    public static String outboundSpecification                                    = "{seq:0, topic:xxx, message:{\"this is message\"}, payload:{}}";
 
     /** inbound decode-field-name */
     public static String payloadParamsDecodeName                                  = "params";
