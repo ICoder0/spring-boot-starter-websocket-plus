@@ -66,7 +66,7 @@ websocket-plus:
   # 上行数据规范信息
   inboundSpecification: {seq:0, topic:xxx, version:0, params:{}}
   # 下行数据规范信息
-  outboundSpecification: {seq:0, topic:'xxx', code:xxx, message:{"this is message"}, content:{}}
+  outboundSpecification: {seq:0, topic:'xxx', code:xxx, message:{"this is message"}, payload:{}}
   # 上行数据header字段#params业务参数
   payloadParamsDecodeName: params
   # 上行数据header字段#sequence消息序号
