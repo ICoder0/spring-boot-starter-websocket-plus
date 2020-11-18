@@ -63,6 +63,8 @@ public class WsMappingHandlerMethodParameterMetadata {
                 final Object arg = payloadParams.getObject(name, type);
                 return arg == null && required ? TypeUtils.cast(defaultValue, type, ParserConfig.getGlobalInstance()) : arg;
             }
+            // 如果payload未传递指定字段名, 按默认值分配, 反之返回null.
+            return required ? TypeUtils.cast(defaultValue, type, ParserConfig.getGlobalInstance()) : null;
         }
 
         if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, webSocketMessage.getClass())) {
