@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 @Getter
 public enum WsBusiCode {
-    OK(200, "[%s]", ""),
+    OK(200, "%s", "%s"),
 
     ILLEGAL_REQUEST_ERROR(400, "检查请求资源规范 [%s]", "check your request message specification [%s]"),
 
