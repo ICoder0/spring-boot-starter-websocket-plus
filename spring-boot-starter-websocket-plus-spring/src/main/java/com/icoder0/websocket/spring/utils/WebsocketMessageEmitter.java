@@ -3,6 +3,7 @@ package com.icoder0.websocket.spring.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.constant.WsAttributeConstant;
+import com.icoder0.websocket.core.constant.WsNativeTopic;
 import com.icoder0.websocket.core.model.WsOutboundBeanSpecification;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +33,8 @@ public class WebsocketMessageEmitter {
                 ), AtomicLong.class).incrementAndGet())
         );
         data.setTopic(Optional.ofNullable(data.topic()).orElse(
-                TypeUtils.castToString(session.getAttributes().getOrDefault(
-                        WsAttributeConstant.TOPIC, "ANONYMOUS TOPIC"
+                TypeUtils.castToLong(session.getAttributes().getOrDefault(
+                        WsAttributeConstant.TOPIC, WsNativeTopic.NO_TOPIC.topic
                 ))
         ));
         final String json = JSON.toJSONString(data);
