@@ -23,8 +23,14 @@ public class DefaultWebsocketMessageCustomizer implements WebsocketMessageCustom
             final TextMessage textMessage = TypeUtils.castToJavaBean(message, TextMessage.class);
             final WsInboundBeanSpecification wsInboundBeanSpecification = JSON.parseObject(textMessage.getPayload(), WebsocketPlusProperties.inboundBeanClazz);
 
-            session.getAttributes().put(WsAttributeConstant.SEQUENCE, wsInboundBeanSpecification.sequence());
             session.getAttributes().put(WsAttributeConstant.TOPIC, wsInboundBeanSpecification.topic());
+            session.getAttributes().compute(WsAttributeConstant.SEQUENCE, (ignore, v) -> {
+                if (v == null){
+                    v = new AtomicLong(wsInboundBeanSpecification.sequence());
+                }
+                TypeUtils.castToJavaBean(v, AtomicLong.class).set(wsInboundBeanSpecification.sequence());
+                return v;
+            });
         }
     }
 }
