@@ -28,10 +28,9 @@ public class WebsocketMessageEmitter {
     public <T extends WsOutboundBeanSpecification> void emit(T data, WebSocketSession session) {
         /* @see DefaultWebsocketMessageCustomizer#customize, 默认在原生缓存attributes中注入了上行数据得到的订阅主题和消息序号. */
         data.setSequence(Optional.ofNullable(data.sequence()).orElse(
-                TypeUtils.castToJavaBean(session.getAttributes().getOrDefault(
-                        WsAttributeConstant.SEQUENCE, new AtomicLong()
-                ), AtomicLong.class).incrementAndGet())
-        );
+                TypeUtils.castToJavaBean(session.getAttributes().get(WsAttributeConstant.SEQUENCE), AtomicLong.class)
+                        .incrementAndGet()
+        ));
         data.setTopic(Optional.ofNullable(data.topic()).orElse(
                 TypeUtils.castToLong(session.getAttributes().getOrDefault(
                         WsAttributeConstant.TOPIC, WsNativeTopic.NO_TOPIC.topic
