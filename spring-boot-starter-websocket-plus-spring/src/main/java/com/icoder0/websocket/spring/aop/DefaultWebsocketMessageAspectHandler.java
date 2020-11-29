@@ -3,6 +3,7 @@ package com.icoder0.websocket.spring.aop;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.util.TypeUtils;
+import com.icoder0.websocket.core.constant.WsAttributeConstant;
 import com.icoder0.websocket.core.exception.WsExceptionTemplate;
 import com.icoder0.websocket.core.exception.WsSpecificationException;
 import com.icoder0.websocket.core.model.WsInboundBeanSpecification;
@@ -17,6 +18,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author bofa1ex
@@ -25,8 +27,13 @@ import java.util.Objects;
 @Slf4j
 public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAspectHandler {
 
+    /**
+     * 不建议用户复写该方法, 可以在WebsocketMessageCustomizer#
+     * @param session
+     * @param message
+     */
     @Override
-    public void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
+    public final void handleInboundMessage(WebSocketSession session, WebSocketMessage<?> message) {
         log.info("{} INBOUND {}", session.getRemoteAddress(), message.getPayload());
         final Class<? extends WsInboundBeanSpecification> inboundBeanClazz = WebsocketPlusProperties.inboundBeanClazz;
         final String inboundSpecification           = WebsocketPlusProperties.inboundSpecification;
@@ -37,6 +44,7 @@ public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAsp
         if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, message.getClass())) {
             final TextMessage textMessage = TypeUtils.castToJavaBean(message, TextMessage.class);
             final JSONObject payload = JSON.parseObject(textMessage.getPayload());
+
             // check inbound bean specification.
             Assert.checkXorCondition(payload.isEmpty() || Objects.isNull(payload.toJavaObject(inboundBeanClazz)), () -> new WsSpecificationException(String.format(
                     WsExceptionTemplate.REQUEST_PARAMETER_INBOUND_SPECIFICATION_ERROR, inboundSpecification
@@ -45,13 +53,24 @@ public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAsp
             Assert.checkCondition(payload.containsKey(payloadSequenceDecodeName), () -> new WsSpecificationException(String.format(
                     WsExceptionTemplate.REQUEST_PARAMETER_HEADER_SEQUENCE_SPECIFICATION_ERROR, payloadSequenceDecodeName
             )));
-            // check inbound bean#params specification.
-            Assert.checkCondition(payload.containsKey(payloadParamsDecodeName), () -> new WsSpecificationException(String.format(
-                    WsExceptionTemplate.REQUEST_PARAMETER_HEADER_PARAMS_SPECIFICATION_ERROR, payloadParamsDecodeName
-            )));
+            // bind sequence in session attributes.
+            session.getAttributes().compute(WsAttributeConstant.SEQUENCE, (ignore, v) -> {
+                final long sequence = payload.getLongValue(payloadSequenceDecodeName);
+                if (v == null){
+                    v = new AtomicLong(sequence);
+                }
+                TypeUtils.castToJavaBean(v, AtomicLong.class).set(sequence);
+                return v;
+            });
             // check inbound bean#topic specification.
             Assert.checkCondition(payload.containsKey(payloadTopicDecodeName), () -> new WsSpecificationException(String.format(
                     WsExceptionTemplate.REQUEST_PARAMETER_HEADER_TOPIC_SPECIFICATION_ERROR, payloadTopicDecodeName
+            )));
+            // bind topic in session attributes.
+            session.getAttributes().put(WsAttributeConstant.TOPIC, payload.getLongValue(payloadTopicDecodeName));
+            // check inbound bean#params specification.
+            Assert.checkCondition(payload.containsKey(payloadParamsDecodeName), () -> new WsSpecificationException(String.format(
+                    WsExceptionTemplate.REQUEST_PARAMETER_HEADER_PARAMS_SPECIFICATION_ERROR, payloadParamsDecodeName
             )));
         }
     }
