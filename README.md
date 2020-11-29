@@ -20,7 +20,7 @@
 public class WsSecurityController{
     // 入参类型@WebsocketPayload可获取params业务参数内部的参数值.
     // 比如 @WebsocketPayload("account") String account.
-    @WebsocketMethodMapping("#inbound.topic == 'login'")
+    @WebsocketMethodMapping("#inbound.topic == 1000")
     public WsOutboundBean<?> login(WebSocketSession session, @Validated WsLoginVO req) {
         log.info("login {}", req);
         session.getAttributes().put("account", req.getAccount());
@@ -34,7 +34,7 @@ public class WsSecurityController{
 
 @WebsocketMapping(value = "/api/xxxx", prototype = true)
 public class WsBusinessController{
-    @WebsocketMethodMapping("#inbound.topic == 'login2'")
+    @WebsocketMethodMapping("#inbound.topic == 1001")
     public WsOutboundBean<?> login2(WebSocketSession session, 
                                     @NotBlank(message="account不可为空") String account,
                                     @WebsocketPayload(defaultValue="10") Integer pageSize,
