@@ -18,7 +18,6 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
  * @author bofa1ex
  * @see EnableWebsocketPlus
  * @see WebsocketMessageCustomizer 用于自定义行为, 处理上行数据.
- * @see DefaultWebsocketMessageCustomizer 默认实现缓存上行数据的seq, functionCode, params.
  * @see WebsocketMessageAspectHandler 用于自定义代理行为, 处理上行数据, 下行数据, 建立连接, 断开连接, 传输出错.
  * @see DefaultWebsocketMessageAspectHandler 默认实现各行为的日志打印, 上行数据规范的校验, 下行数据的自动下发, 建议用户复写建立连接和断开连接的缓存行为.
  * @since 2020/8/1
@@ -38,16 +37,6 @@ public class WebsocketPlusAutoConfiguration {
     @ConditionalOnMissingBean(WebsocketMessageAspectHandler.class)
     public WebsocketMessageAspectHandler websocketMessageAspectHandler() {
         return new DefaultWebsocketMessageAspectHandler();
-    }
-
-    /**
-     * 用户可自定义实现WebsocketMessageCustomizer, 加入更多对上行数据处理的行为.
-     * 但是默认实现不可覆盖.
-     */
-    @Bean
-    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public WebsocketMessageCustomizer websocketMessageCustomizer() {
-        return new DefaultWebsocketMessageCustomizer();
     }
 
     /**
