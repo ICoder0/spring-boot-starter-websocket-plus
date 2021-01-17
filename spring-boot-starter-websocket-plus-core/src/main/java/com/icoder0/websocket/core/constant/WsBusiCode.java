@@ -14,6 +14,8 @@ public enum WsBusiCode {
 
     AUTH_ERROR(403, "检查认证规范 [%s]", "check your auth arguments [%s]"),
 
+    SESSION_DISCONNECT_ERROR(410, "会话已断开, 请尝试重新连接", "session has disconnected, please try to connect again."),
+
     INTERNAL_ERROR(500, "系统内部异常 [%s]", "system internal exception [%s]"),
 
     BUSINESS_ERROR(600, "业务数据异常 [%s]", "business data exception [%s]");
