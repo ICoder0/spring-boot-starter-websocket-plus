@@ -3,7 +3,6 @@
 
 示例参见example模块即可.
 ```xml
-#Maven#
 <dependencies>
     <dependency>
         <groupId>com.icoder0</groupId>
