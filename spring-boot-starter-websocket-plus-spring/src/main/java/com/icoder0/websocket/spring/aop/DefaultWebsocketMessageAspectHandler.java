@@ -18,6 +18,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -43,7 +44,7 @@ public class DefaultWebsocketMessageAspectHandler implements WebsocketMessageAsp
 
         if (org.springframework.util.TypeUtils.isAssignable(TextMessage.class, message.getClass())) {
             final TextMessage textMessage = TypeUtils.castToJavaBean(message, TextMessage.class);
-            final JSONObject payload = JSON.parseObject(textMessage.getPayload());
+            final JSONObject payload = Optional.ofNullable(JSON.parseObject(textMessage.getPayload())).orElseGet(JSONObject::new);
 
             // check inbound bean specification.
             Assert.checkXorCondition(payload.isEmpty() || Objects.isNull(payload.toJavaObject(inboundBeanClazz)), () -> new WsSpecificationException(String.format(
