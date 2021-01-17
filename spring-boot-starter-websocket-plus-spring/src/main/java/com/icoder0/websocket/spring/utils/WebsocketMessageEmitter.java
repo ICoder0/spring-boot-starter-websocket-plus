@@ -27,15 +27,17 @@ public class WebsocketMessageEmitter {
      */
     public <T extends WsOutboundBeanSpecification> void emit(T data, WebSocketSession session) {
         /* @see DefaultWebsocketMessageCustomizer#customize, 默认在原生缓存attributes中注入了上行数据得到的订阅主题和消息序号. */
-        data.setSequence(Optional.ofNullable(data.sequence()).orElse(
-                TypeUtils.castToJavaBean(session.getAttributes().get(WsAttributeConstant.SEQUENCE), AtomicLong.class)
-                        .incrementAndGet()
-        ));
-        data.setTopic(Optional.ofNullable(data.topic()).orElse(
-                TypeUtils.castToLong(session.getAttributes().getOrDefault(
-                        WsAttributeConstant.TOPIC, WsNativeTopic.NO_TOPIC.topic
-                ))
-        ));
+        if (data.sequence() == null) {
+            AtomicLong sequence = TypeUtils.castToJavaBean(session.getAttributes().get(WsAttributeConstant.SEQUENCE), AtomicLong.class);
+            if (sequence == null) {
+                sequence = new AtomicLong(-1L);
+                session.getAttributes().putIfAbsent(WsAttributeConstant.SEQUENCE, sequence);
+            }
+            data.setSequence(sequence.incrementAndGet());
+        }
+        if (data.topic() == null) {
+            data.setTopic(TypeUtils.castToLong(session.getAttributes().getOrDefault(WsAttributeConstant.TOPIC, WsNativeTopic.NO_TOPIC.topic)));
+        }
         final String json = JSON.toJSONString(data);
         log.info("{} OUTBOUND {}", session.getRemoteAddress(), json);
         try {
