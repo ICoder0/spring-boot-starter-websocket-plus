@@ -6,6 +6,7 @@ import com.alibaba.fastjson.parser.ParserConfig;
 import com.alibaba.fastjson.util.TypeUtils;
 import com.icoder0.websocket.core.exception.WsException;
 import com.icoder0.websocket.core.constant.WsBusiCode;
+import com.icoder0.websocket.core.exception.WsSpecificationException;
 import com.icoder0.websocket.spring.WebsocketPlusProperties;
 import io.netty.buffer.*;
 import lombok.Builder;
@@ -69,7 +70,9 @@ public class WsMappingHandlerMethodParameterMetadata {
 
         if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, webSocketMessage.getClass())) {
             final BinaryMessage binaryMessage = TypeUtils.castToJavaBean(webSocketMessage, BinaryMessage.class);
-
+            if (org.springframework.util.TypeUtils.isAssignable(BinaryMessage.class, type)) {
+                return binaryMessage;
+            }
             if (org.springframework.util.TypeUtils.isAssignable(ByteBuffer.class, type)) {
                 return binaryMessage.getPayload();
             }
@@ -79,7 +82,7 @@ public class WsMappingHandlerMethodParameterMetadata {
             if (org.springframework.util.TypeUtils.isAssignable(byte[].class, type)) {
                 return binaryMessage.getPayload().array();
             }
-            return binaryMessage;
+            throw new WsSpecificationException(String.format("BinaryMessage暂不支持当前类型[%s]的转换", type.getSimpleName()));
         }
 
         if (org.springframework.util.TypeUtils.isAssignable(PingMessage.class, type)) {
@@ -89,6 +92,6 @@ public class WsMappingHandlerMethodParameterMetadata {
             return webSocketMessage;
         }
 
-        throw new WsException(WsBusiCode.INTERNAL_ERROR, "IGNORE");
+        throw new WsException(WsBusiCode.INTERNAL_ERROR, "IMPOSSIBLE SCENE");
     }
 }
