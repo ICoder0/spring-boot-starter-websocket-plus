@@ -64,11 +64,14 @@ public class WsContactController{
     ) {
         WebsocketMessageEmitter.emit(WsOutboundBean.topic(T1001.topic).ok(ImmutableList.of(
             Contact.builder().name("张三").build(),
-            Contact.builder().name("李四").build()
+            Contact.builder().name("李四").build() 
         )), session);
     }
 }
 
+/**
+ * 考虑到同一个路由映射到不同业务的Controller, 需要对WebsocketMapping#prototype设置为True.
+ */
 @WebsocketMapping(value = "/api/trista", prototype = true)
 public class WsOtherBussinessController{
 
