@@ -14,39 +14,98 @@
 
 ```java
 启动类声明 @EnableWebsocketPlus即可.
-
-@WebsocketMapping(value = "/api/xxxx", prototype = true)
-public class WsSecurityController{
-    // 入参类型@WebsocketPayload可获取params业务参数内部的参数值.
-    // 比如 @WebsocketPayload("account") String account.
-    @WebsocketMethodMapping("#inbound.topic == 1000")
-    public WsOutboundBean<?> login(WebSocketSession session, @Validated WsLoginVO req) {
-        log.info("login {}", req);
-        session.getAttributes().put("account", req.getAccount());
-        return WsOutboundBean.ok().body(ImmutableMap.of(
-                "hello", "world"
-        ));
+@EnableWebsocketPlus
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
     }
-    // 返参必须是WsOutboundBeanSpecification类型或者Void类型.
-    // 如果是WsOutboundBeanSpecification类型, 会自动下发数据.
 }
 
-@WebsocketMapping(value = "/api/xxxx", prototype = true)
-public class WsBusinessController{
-    @WebsocketMethodMapping("#inbound.topic == 1001")
-    public WsOutboundBean<?> login2(WebSocketSession session, 
-                                    @NotBlank(message="account不可为空") String account,
-                                    @WebsocketPayload(defaultValue="10") Integer pageSize,
-                                    @WebsocketPayload(defaultValue="0") Integer pageNo
-    ) {
-        log.info("login2 account:{} pageNo:{} pageSize:{}", account, pageNo, pageSize);
-        session.getAttributes().put("account", account);
-        return WsOutboundBean.ok().body(ImmutableMap.of(
-                "hello", "world"
+@WebsocketMapping(value = "/api/trista", prototype = true)
+@WebsocketApi("ws联系人接口")
+public class WsContactController{
+
+    /**
+     * websocket上行报文: {
+     *     "sequence": 0,
+     *     "version": 0,
+     *     "topic": 1000,
+     *     "params": {
+     *         "account": 123456789
+     *     }
+     * }
+     * @param  account 提取于payload#params#account
+     * @return WsOutboundBeanSpecification类型即自动下发下行报文.
+     */ 
+    @WebsocketOperation("获取指定账号的联系人列表")
+    @WebsocketMethodMapping("#inbound.topic == 1000")
+    public WsOutboundBean<?> getContacts(@Size(min = 4, max = 11, message = "长度不可小于4, 不可大于11")
+                                         @NotBlank String account
+    ){
+        return WsOutboundBean.topic(T1000.topic).ok(ImmutableList.of(
+            Contact.builder().name("张三").build(),
+            Contact.builder().name("李四").build()
         ));
     }
-    // 返参必须是WsOutboundBeanSpecification类型或者Void类型.
-    // 如果是WsOutboundBeanSpecification类型, 会自动下发数据.
+    
+    /**
+     * 入参可选WebSocketSession/TextMessage/BinaryMessage/PingMessage/PongMessage
+     * TextMessage对应可选上行报文中(sequence, version, topic, params或params指定内部参数)
+     * BinaryMessage对应可选(io.netty.buffer.ByteBuf, java.nio.ByteBuffer, byte[])
+     *
+     * @param  account 提取于payload#params#account
+     * @return Void跳过自动下发下行报文, 可通过WebsocketMessageEmitter#emit下发下行报文.
+     */
+    @WebsocketMethodMapping("#inbound.topic == 1001")
+    public void getContactsV2(WebSocketSession session, 
+                              @Size(min = 4, max = 11, message = "长度不可小于4, 不可大于11")
+                              @NotBlank String account
+    ) {
+        WebsocketMessageEmitter.emit(WsOutboundBean.topic(T1001.topic).ok(ImmutableList.of(
+            Contact.builder().name("张三").build(),
+            Contact.builder().name("李四").build()
+        )), session);
+    }
+}
+
+@WebsocketMapping(value = "/api/trista", prototype = true)
+public class WsOtherBussinessController{
+
+    /**
+     * websocket上行报文: {
+     *     "sequence": 0,
+     *     "version": 0,
+     *     "topic": 1003,
+     *     "params": {
+     *         "predicates": {
+     *             "account": "^123.*$"
+     *         },
+     *         "orders": {
+     *             "createTime":0,
+     *             "account":1
+     *         },
+     *         pageNo: 1,
+     *         pageSize: 5
+     *     }
+     * }
+     * @param businessDTO 根据payload#params提取.
+     * @param pageNo 根据payload#params#pageNo, 修饰于WebsocketPayload, 因此根据required和defaultValue属性, 即使字段不存在, 也会视具体情况给定值.
+     * @param pageSize 根据payload#pararms#pageSize, 修饰于WebsocketPayload, 因此根据required和defaultValue属性, 即使字段不存在, 也会视具体情况给定值.
+     */
+    @WebsocketOperation("获取业务数据列表(分页)")
+    @WebsocketMethodMapping("#inbound.topic == 1003")
+    public WsOutboundBean<?> getList(WebSocketSession session,
+                                     BusinessDTO businessDTO,
+                                     @WebsocketPayload(defaultValue = "0") Integer pageNo,
+                                     @WebsocketPayload(defaultValue = "10") Integer pageSize) {
+        return WsOutboundBean.topic(T1003.topic).ok(busiService.getList(businessDTO, ImmutablePair.of(pageNo, pageSize)));
+    }
+    
+    public class BusinessDTO {
+        private Map<String,String> predicates;
+        private Map<String,Byte> orders;
+    }
 }
 ```
 
