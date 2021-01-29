@@ -13,7 +13,7 @@
 ```
 
 ```java
-启动类声明 @EnableWebsocketPlus即可.
+// 启动类声明 @EnableWebsocketPlus即可.
 @EnableWebsocketPlus
 @SpringBootApplication
 public class Application {
