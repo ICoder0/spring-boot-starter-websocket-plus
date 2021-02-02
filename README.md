@@ -1,4 +1,12 @@
-# spring-boot-starter-websocket-plus
+<p align="center">
+ <h2 align="center">Spring-boot-starter-websocket-plus</h2>
+</p>
+
+<p align="center">
+  <img alt="AUR license" src="https://img.shields.io/aur/license/intellij-idea-ce">
+  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/icoder0/spring-boot-starter-websocket-plus?style=social">
+  <img alt="GitHub forks" src="https://img.shields.io/github/forks/icoder0/spring-boot-starter-websocket-plus?style=social">
+</p>
 基于spring-websocket-starter依赖, 提供mvc开发风格
 
 示例参见example模块即可.
