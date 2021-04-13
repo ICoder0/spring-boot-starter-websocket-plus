@@ -1,5 +1,5 @@
 <p align="center">
- <h2 align="center">Spring-boot-starter-websocket-plus</h2>
+ <h2 align="center">spring-boot-starter-websocket-plus</h2>
 </p>
 
 <p align="center">
